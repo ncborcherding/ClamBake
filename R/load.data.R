@@ -4,7 +4,7 @@ load.data <- function(file.dir,
                       meta.file,
                       contrast = NULL,
                       baseline = NULL,
-                      vars.to.constrast = NULL,
+                      vars.to.contrast = NULL,
                       headers = NULL) {
   
   ##########################
@@ -72,7 +72,7 @@ make.contrast <- function(meta.file,
   }
   #Selecting variables to contrast
   #If not entered will select numerical values
-  contrast.idx <- which(colnames(meta) == contrast)
+  contrast.idx <- which(colnames(meta.file) == contrast)
   if (is.null(vars.to.contrast)) {
     vars.to.contrast <- names(which(sapply(meta.file, is.numeric)))
     vars.index <- unname(which(sapply(meta.file, is.numeric)))
@@ -81,19 +81,28 @@ make.contrast <- function(meta.file,
   }
   #Looping through the vars.to.contrast to find differentce
   for(i in seq_along(vars.to.contrast)) {
-    tmp <- meta[,c(colnames(meta)[1],vars.to.contrast[i], contrast)] 
+    tmp <- meta.file[,c(colnames(meta.file)[1],vars.to.contrast[i], contrast)] 
     colnames(tmp)[2] <- "value"
     diff.values <- tmp %>%
       summarise(delta = value - value[tmp[,3] == baseline])
-    diff.values <- diff.values[diff.values != 0]
-    names(diff.values) <- unique(meta[,colnames(meta)[1]])
+    
+    #Preponderance of 0s detector
+    where.to.remove <- which(diff.values == 0)
+    group.size <- nrow(diff.values)/2
+    teamA <- which(where.to.remove %in% seq_len(group.size))
+    if(length(teamA) == group.size) {
+      diff.values <- diff.values[-seq_len(group.size),]
+    } else {
+      diff.values <- diff.values[-c(group.size+1:nrow(diff.values)),]
+    }
+    names(diff.values) <- unique(meta.file[,colnames(meta.file)[1]])
     if (i == 1) {
       contrasted.values <- diff.values
     } else {
       contrasted.values <- rbind(contrasted.values, diff.values)
     }
   }
-  new.tmp <- unique(meta[,-which(colnames(meta) %in% c(vars.to.contrast, contrast))])
+  new.tmp <- unique(meta.file[,-which(colnames(meta.file) %in% c(vars.to.contrast, contrast))])
   contrasted.values <- as.data.frame(t(contrasted.values))
   colnames(contrasted.values) <- vars.to.contrast
   new.tmp <- cbind(new.tmp, contrasted.values)

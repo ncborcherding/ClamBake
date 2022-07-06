@@ -6,12 +6,15 @@ output: html_document
 ```{r}
 source("~/Documents/GitHub/ClamBake/R/load.data.R")
 source("~/Documents/GitHub/ClamBake/R/merge.data.R")
+source("~/Documents/GitHub/ClamBake/R/utils.R")
 
 dir.to.use <- "./data_sets/2022-03-14 B6 Fed Fasting 30C Metabolic Data/cage_data/2022-03-14 D1 Feed"
 meta.file <- "./data_sets/2022-03-14 B6 Fed Fasting 30C Metabolic Data/feed.meta.csv"
 
 dat.fed <- load.data(file.dir = dir.to.use,
-                 meta.file = meta.file)
+                 meta.file = meta.file, 
+                 contrast = "Condition",
+                      baseline = "Pre")
 
 dir.to.use <- "./data_sets/2022-03-14 B6 Fed Fasting 30C Metabolic Data/cage_data/2022-03-15 D2 Fasting"
 meta.file <- "./data_sets/2022-03-14 B6 Fed Fasting 30C Metabolic Data/fast.meta.csv"
@@ -22,44 +25,7 @@ dat.fast <- load.data(file.dir = dir.to.use,
 merged <- merge.data(list(dat.fast, dat.fed))
 
 contrast = "Condition"
-make.contrast <- function(meta.file, 
-                          contrast, 
-                          baseline,
-                          vars.to.contrast) {
-  if(contrast %!in% colnames(meta.file)) {
-    stop("Contrasting variable not present to base calculation on")
-  }
-  if (is.null(baseline)) {
-    baseline <- sort(unique(meta.file[,contrast]))[1]
-  }
-  contrast.idx <- which(colnames(meta) == contrast)
-  if (is.null(vars.to.contrast)) {
-    vars.to.contrast <- names(which(sapply(meta.file, is.numeric)))
-    vars.index <- unname(which(sapply(meta.file, is.numeric)))
-    vars.to.contrast <- vars.to.contrast[-1]
-    vars.idx <- vars.index[-1]
-    
-  }
-  
-  for(i in seq_along(vars.to.contrast)) {
-    tmp <- meta[,c(colnames(meta)[1],vars.to.contrast[i], contrast)] 
-    colnames(tmp)[2] <- "value"
-    diff.values <- tmp %>%
-                dplyr::summarise(delta = value - value[tmp[,3] == baseline])
-    diff.values <- diff.values[diff.values != 0]
-    names(diff.values) <- unique(meta[,colnames(meta)[1]])
-    if (i == 1) {
-      contrasted.values <- diff.values
-    } else {
-      contrasted.values <- rbind(contrasted.values, diff.values)
-    }
-  }
-    new.tmp <- unique(meta[,-which(colnames(meta) %in% c(vars.to.contrast, contrast))])
-    contrasted.values <- as.data.frame(t(contrasted.values))
-    colnames(contrasted.values) <- vars.to.contrast
-    new.tmp <- cbind(new.tmp, contrasted.values)
-    return(new.tmp)
-  }
+
     
 
   
