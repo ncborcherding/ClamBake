@@ -1,6 +1,8 @@
 library(stringr)
 load.data <- function(file.dir, 
                       meta.file,
+                      contrast = NULL,
+                      vars.to.constrast = NULL,
                       headers = NULL) {
   
   ##########################
@@ -37,6 +39,9 @@ load.data <- function(file.dir,
   if(!is.null(meta.file)) {
     meta.file <- read.csv(meta.file)
     meta.file$filename <- str_remove(meta.file$filename, ".csv|.CSV")
+    if(!is.null(contrast)) {
+      
+    }
   } else {
     meta.file <- NA
   }
@@ -44,11 +49,7 @@ load.data <- function(file.dir,
   #######################
   #Creating Return Object
   #######################
-  final.object <- list(cage_data = list)
-  if(!is.null(meta.file)) {
-    final.object[[2]] <- meta.file
-  }
-  names(final.object)[2] <- "meta_data"
+  final.object <- list(cage_data = list, meta_data = meta.file)
   
   return(final.object)
 }
