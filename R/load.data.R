@@ -1,7 +1,9 @@
 library(stringr)
+library(dplyr)
 load.data <- function(file.dir, 
                       meta.file,
                       contrast = NULL,
+                      baseline = NULL,
                       vars.to.constrast = NULL,
                       headers = NULL) {
   
@@ -40,7 +42,10 @@ load.data <- function(file.dir,
     meta.file <- read.csv(meta.file)
     meta.file$filename <- str_remove(meta.file$filename, ".csv|.CSV")
     if(!is.null(contrast)) {
-      
+      meta.file <- make.contrast(meta.file, 
+                                 contrast, 
+                                 baseline,
+                                 vars.to.contrast)
     }
   } else {
     meta.file <- NA
@@ -52,4 +57,45 @@ load.data <- function(file.dir,
   final.object <- list(cage_data = list, meta_data = meta.file)
   
   return(final.object)
+}
+
+make.contrast <- function(meta.file, 
+                          contrast, 
+                          baseline,
+                          vars.to.contrast) {
+  if(contrast %!in% colnames(meta.file)) {
+    stop("Contrasting variable not present to base calculation on")
+  }
+  # Baseline either entered above or selected alphabetically
+  if (is.null(baseline)) {
+    baseline <- sort(unique(meta.file[,contrast]))[1]
+  }
+  #Selecting variables to contrast
+  #If not entered will select numerical values
+  contrast.idx <- which(colnames(meta) == contrast)
+  if (is.null(vars.to.contrast)) {
+    vars.to.contrast <- names(which(sapply(meta.file, is.numeric)))
+    vars.index <- unname(which(sapply(meta.file, is.numeric)))
+    vars.to.contrast <- vars.to.contrast[-1]
+    vars.idx <- vars.index[-1]
+  }
+  #Looping through the vars.to.contrast to find differentce
+  for(i in seq_along(vars.to.contrast)) {
+    tmp <- meta[,c(colnames(meta)[1],vars.to.contrast[i], contrast)] 
+    colnames(tmp)[2] <- "value"
+    diff.values <- tmp %>%
+      summarise(delta = value - value[tmp[,3] == baseline])
+    diff.values <- diff.values[diff.values != 0]
+    names(diff.values) <- unique(meta[,colnames(meta)[1]])
+    if (i == 1) {
+      contrasted.values <- diff.values
+    } else {
+      contrasted.values <- rbind(contrasted.values, diff.values)
+    }
+  }
+  new.tmp <- unique(meta[,-which(colnames(meta) %in% c(vars.to.contrast, contrast))])
+  contrasted.values <- as.data.frame(t(contrasted.values))
+  colnames(contrasted.values) <- vars.to.contrast
+  new.tmp <- cbind(new.tmp, contrasted.values)
+  return(new.tmp)
 }
