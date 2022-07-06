@@ -1,3 +1,4 @@
+library(stringr)
 load.data <- function(file.dir, 
                       meta.file,
                       headers = NULL) {
@@ -23,7 +24,7 @@ load.data <- function(file.dir,
   ###################
   files.to.load <- list.files(file.dir, pattern = "CSV|csv")
   list <- lapply(files.to.load, FUN = function(x) { 
-    tmp <- read.csv(paste0(dir, "/", x), skip =25, header = FALSE) 
+    tmp <- read.csv(paste0(file.dir, "/", x), skip =25, header = FALSE) 
     colnames(tmp) <- colnames.to.be
     tmp
   })
@@ -35,6 +36,9 @@ load.data <- function(file.dir,
   ##################
   if(!is.null(meta.file)) {
     meta.file <- read.csv(meta.file)
+    meta.file$filename <- str_remove(meta.file$filename, ".csv|.CSV")
+  } else {
+    meta.file <- NA
   }
   
   #######################
