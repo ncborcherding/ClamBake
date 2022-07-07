@@ -31,9 +31,13 @@ load.data <- function(file.dir,
   list <- lapply(files.to.load, FUN = function(x) { 
     tmp <- read.csv(paste0(file.dir, "/", x), skip =25, header = FALSE) 
     colnames(tmp) <- colnames.to.be
+    #Little off the top for equilibration purposes
     if(!is.null(equilibrate.interval)) {
       tmp <- tmp[-seq_len(equilibrate.interval),]
     }
+    tmp <- tmp[,seq_len(length(colnames.to.be))] #Only selected columns
+    tmp <- tmp[-nrow(tmp),] #remove ":EVENT"
+    tmp$filename <- str_remove(files.to.load[x], ".csv|.CSV")
     tmp
   })
   files.to.load <- str_remove(files.to.load, ".csv|.CSV")
