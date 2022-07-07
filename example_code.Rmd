@@ -80,20 +80,30 @@ full.data <- merge.data(list(dat.fed,dat.fast,dat.30,dat.25,dat.25,dat.20,dat.15
 ```{r}
 cage.data <- full.data
 y.axis = "VO2"
+group.by = "Sex"
+split.by = "Genotype"
 plot.track <- function(cage.data, 
                        group.by = NULL,
                        split.by = NULL,
                        y.axis = NULL,
                        sample.subset = NULL) {
   
-  laaply
-  pre.plot.dat <- bind_rows(cage.data[[1]])
-  colnames(pre.plot.dat)[which(colnames(pre.plot.dat) == y.axis)] <- "y.axis"
   
   if(!is.null(group.by) | !is.null(split.by)) {
     pre.plot.dat <- pull.dat(c(group.by, split.by), cage.data)
+    num.vals <- length(c(group.by, split.by))
+    which(is.null(c(group.by, split.by)))
+    
+    num.vals <- num.vals-1
+    pre.plot.dat
+    colnames(pre.plot.dat)[(ncol(pre.plot.dat)-num.vals):ncol(pre.plot.dat)] <- c()
+        pre.plot.dat %>%
+          group_by(Interval_num, group.by, split.by) %>%
+          summarise(y.axis = mean(y.axis))
+    colnames(pre.plot) <- c("x.axis","y.axis")
   } else {
     pre.plot.dat <- bind_rows(cage.data[[1]])
+    colnames(pre.plot.dat)[which(colnames(pre.plot.dat) == y.axis)] <- "y.axis"
     pre.plot.dat <- pre.plot.dat %>%
       group_by(Interval_num) %>%
       summarise(y.axis = mean(y.axis))
@@ -122,19 +132,6 @@ plot.track <- function(cage.data,
   return(plot)
 }
 
-pull.dat <- function(header.list, original.dat) {
-  meta <- original.dat[[2]]
-  for(i in seq_along(original.dat[[1]])) {
-    list.tmp.it <- original.dat[[1]][[i]]
-    for(j in seq_along(header.list)) {
-      list.tmp.it[,header.list[j]] <- unique(meta[which(meta$filename == names(original.dat[[1]])[i]), header.list[j]])
-    }
-  if(i == 1) {
-    out.data <- list.tmp.it 
-  } else {}
-    out.data <- rbind(out.data, list.tmp.it)
-  }
-  return(out.data)
-}
+
 ```
 
