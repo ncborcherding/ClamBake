@@ -13,6 +13,7 @@ meta.file <- "./data_sets/2022-03-14 B6 Fed Fasting 30C Metabolic Data/feed.meta
 
 dat.fed <- load.data(file.dir = dir.to.use,
                  meta.file = meta.file, 
+                 equilibrate.interval = 8,
                  contrast = "Condition",
                       baseline = "Pre")
 
@@ -20,15 +21,59 @@ dir.to.use <- "./data_sets/2022-03-14 B6 Fed Fasting 30C Metabolic Data/cage_dat
 meta.file <- "./data_sets/2022-03-14 B6 Fed Fasting 30C Metabolic Data/fast.meta.csv"
 
 dat.fast <- load.data(file.dir = dir.to.use,
-                 meta.file = meta.file)
+                 meta.file = meta.file, 
+                 contrast = "Condition",
+                      baseline = "Pre")
 
-merged <- merge.data(list(dat.fast, dat.fed))
+dir.to.use <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/cage_data/2022-03-22 30C"
+meta.file <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/30.meta.csv"
 
-contrast = "Condition"
+dat.30 <- load.data(file.dir = dir.to.use,
+                 meta.file = meta.file, 
+                 contrast = "Condition",
+                      baseline = "Pre")
 
-    
+dir.to.use <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/cage_data/2022-03-23 25C"
+meta.file <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/25.meta.csv"
 
+dat.25 <- load.data(file.dir = dir.to.use,
+                 meta.file = meta.file, 
+                 contrast = "Condition",
+                      baseline = "Pre")
+
+dir.to.use <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/cage_data/2022-03-24 20C"
+meta.file <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/20.meta.csv"
+
+dat.20 <- load.data(file.dir = dir.to.use,
+                 meta.file = meta.file, 
+                 contrast = "Condition",
+                      baseline = "Pre")
+
+dir.to.use <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/cage_data/2022-03-25 15C"
+meta.file <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/15.meta.csv"
+
+dat.15 <- load.data(file.dir = dir.to.use,
+                 meta.file = meta.file, 
+                 contrast = "Condition",
+                      baseline = "Pre")
+
+dir.to.use <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/cage_data/2022-03-26 10C"
+meta.file <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/10.meta.csv"
+
+dat.10 <- load.data(file.dir = dir.to.use,
+                 meta.file = meta.file, 
+                 contrast = "Condition",
+                      baseline = "Pre")
+
+dir.to.use <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/cage_data/2022-03-27 5C"
+meta.file <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/5.meta.csv"
+
+dat.5 <- load.data(file.dir = dir.to.use,
+                 meta.file = meta.file, 
+                 contrast = "Condition",
+                      baseline = "Pre")
   
 
+full.data <- merge.data(list(dat.fed,dat.fast,dat.30,dat.25,dat.25,dat.20,dat.15,dat.10,dat.5))
 ```
 

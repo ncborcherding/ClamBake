@@ -2,6 +2,7 @@ library(stringr)
 library(dplyr)
 load.data <- function(file.dir, 
                       meta.file,
+                      equilibrate.interval = 8,
                       contrast = NULL,
                       baseline = NULL,
                       vars.to.contrast = NULL,
@@ -30,6 +31,9 @@ load.data <- function(file.dir,
   list <- lapply(files.to.load, FUN = function(x) { 
     tmp <- read.csv(paste0(file.dir, "/", x), skip =25, header = FALSE) 
     colnames(tmp) <- colnames.to.be
+    if(!is.null(equilibrate.interval)) {
+      tmp <- tmp[-seq_len(equilibrate.interval),]
+    }
     tmp
   })
   files.to.load <- str_remove(files.to.load, ".csv|.CSV")
