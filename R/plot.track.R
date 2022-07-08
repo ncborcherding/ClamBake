@@ -7,8 +7,9 @@ plot.track <- function(cage.data,
                        split.by = NULL,
                        y.axis = NULL,
                        sample.subset = NULL) {
-  
-  
+  if(!is.null(samples.subset)) {
+    cage.data <- subset.data(cage.data, sample.subset)
+  }
   if(!is.null(group.by) | !is.null(split.by)) {
     pre.plot.dat <- pull.dat(c(group.by, split.by), cage.data)
     colnames(pre.plot.dat)[which(colnames(pre.plot.dat) == y.axis)] <- "y.axis"
