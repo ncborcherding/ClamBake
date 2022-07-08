@@ -1,33 +1,33 @@
-CLAMS,Ear tag,Genotype,Sex,Weight,Fat mass,Lean mass,Condition,filename
-1,8wks-1,B6,M,28.6,1.99,25.15,Pre,2022-03-14 B6 Fasting.0101.CSV
-2,16wks-1,B6,M,29,2.72,24.91,Pre,2022-03-14 B6 Fasting.0102.CSV
-3,16wks-2,B6,M,31,1.82,27.9,Pre,2022-03-14 B6 Fasting.0103.CSV
-4,8wks-2,B6,M,25.7,1.56,22.94,Pre,2022-03-14 B6 Fasting.0104.CSV
-5,16wks-3,B6,M,29.8,1.17,26.75,Pre,2022-03-14 B6 Fasting.0105.CSV
-6,8wks-3,B6,M,25.8,1.74,22.6,Pre,2022-03-14 B6 Fasting.0106.CSV
-7,16wks-4,B6,M,31.7,2.07,27.97,Pre,2022-03-14 B6 Fasting.0107.CSV
-8,8wks-4,B6,M,28.8,1.19,25.9,Pre,2022-03-14 B6 Fasting.0108.CSV
-9,8wks-1,B6,F,18.7,0.81,16.34,Pre,2022-03-14 B6 Fasting.0109.CSV
-10,16wks-1,B6,F,22.7,2.69,18.29,Pre,2022-03-14 B6 Fasting.0110.CSV
-11,8wks-2,B6,F,17.2,1.55,14.45,Pre,2022-03-14 B6 Fasting.0111.CSV
-12,16wks-2,B6,F,25.4,4.49,19.31,Pre,2022-03-14 B6 Fasting.0112.CSV
-13,16wks-3,B6,F,23.5,2.87,18.81,Pre,2022-03-14 B6 Fasting.0113.CSV
-14,8wks-3,B6,F,19.9,1.35,16.83,Pre,2022-03-14 B6 Fasting.0114.CSV
-15,8wks-4,B6,F,17.8,1.42,14.82,Pre,2022-03-14 B6 Fasting.0115.CSV
-16,16wks-4,B6,F,20.8,1.37,17.63,Pre,2022-03-14 B6 Fasting.0116.CSV
-1,8wks-1,B6,M,25.2,0.95,22.96,Post,2022-03-14 B6 Fasting.0101.CSV
-2,16wks-1,B6,M,26.3,1.75,23.07,Post,2022-03-14 B6 Fasting.0102.CSV
-3,16wks-2,B6,M,27.2,0.54,25.18,Post,2022-03-14 B6 Fasting.0103.CSV
-4,8wks-2,B6,M,22.5,0.51,20.67,Post,2022-03-14 B6 Fasting.0104.CSV
-5,16wks-3,B6,M,25.7,0.51,20.67,Post,2022-03-14 B6 Fasting.0105.CSV
-6,8wks-3,B6,M,22.8,0.74,20.59,Post,2022-03-14 B6 Fasting.0106.CSV
-7,16wks-4,B6,M,28.9,1.21,25.99,Post,2022-03-14 B6 Fasting.0107.CSV
-8,8wks-4,B6,M,25.4,0.12,23.78,Post,2022-03-14 B6 Fasting.0108.CSV
-9,8wks-1,B6,F,16.5,0.24,14.91,Post,2022-03-14 B6 Fasting.0109.CSV
-10,16wks-1,B6,F,20.5,1.96,17.24,Post,2022-03-14 B6 Fasting.0110.CSV
-11,8wks-2,B6,F,15.3,0.98,12.98,Post,2022-03-14 B6 Fasting.0111.CSV
-12,16wks-2,B6,F,24,3.83,18.37,Post,2022-03-14 B6 Fasting.0112.CSV
-13,16wks-3,B6,F,20.9,2.09,17.23,Post,2022-03-14 B6 Fasting.0113.CSV
-14,8wks-3,B6,F,17.7,0.68,15.55,Post,2022-03-14 B6 Fasting.0114.CSV
-15,8wks-4,B6,F,15.7,0.83,13.46,Post,2022-03-14 B6 Fasting.0115.CSV
-16,16wks-4,B6,F,17.9,0.58,15.95,Post,2022-03-14 B6 Fasting.0116.CSV
+CLAMS,Ear tag,Genotype,Sex,Weight,Fat mass,Lean mass,Condition,Age,filename
+1,8wks-1,B6,Male,28.6,1.99,25.15,Pre,8wks,2022-03-15 B6 Fed Fasting 30c D2.0101.CSV
+2,16wks-1,B6,Male,29,2.72,24.91,Pre,16wks,2022-03-15 B6 Fed Fasting 30c D2.0102.CSV
+3,16wks-2,B6,Male,31,1.82,27.9,Pre,16wks,2022-03-15 B6 Fed Fasting 30c D2.0103.CSV
+4,8wks-2,B6,Male,25.7,1.56,22.94,Pre,8wks,2022-03-15 B6 Fed Fasting 30c D2.0104.CSV
+5,16wks-3,B6,Male,29.8,1.17,26.75,Pre,16wks,2022-03-15 B6 Fed Fasting 30c D2.0105.CSV
+6,8wks-3,B6,Male,25.8,1.74,22.6,Pre,8wks,2022-03-15 B6 Fed Fasting 30c D2.0106.CSV
+7,16wks-4,B6,Male,31.7,2.07,27.97,Pre,16wks,2022-03-15 B6 Fed Fasting 30c D2.0107.CSV
+8,8wks-4,B6,Male,28.8,1.19,25.9,Pre,8wks,2022-03-15 B6 Fed Fasting 30c D2.0108.CSV
+9,8wks-1,B6,Female,18.7,0.81,16.34,Pre,8wks,2022-03-15 B6 Fed Fasting 30c D2.0109.CSV
+10,16wks-1,B6,Female,22.7,2.69,18.29,Pre,16wks,2022-03-15 B6 Fed Fasting 30c D2.0110.CSV
+11,8wks-2,B6,Female,17.2,1.55,14.45,Pre,8wks,2022-03-15 B6 Fed Fasting 30c D2.0111.CSV
+12,16wks-2,B6,Female,25.4,4.49,19.31,Pre,16wks,2022-03-15 B6 Fed Fasting 30c D2.0112.CSV
+13,16wks-3,B6,Female,23.5,2.87,18.81,Pre,16wks,2022-03-15 B6 Fed Fasting 30c D2.0113.CSV
+14,8wks-3,B6,Female,19.9,1.35,16.83,Pre,8wks,2022-03-15 B6 Fed Fasting 30c D2.0114.CSV
+15,8wks-4,B6,Female,17.8,1.42,14.82,Pre,8wks,2022-03-15 B6 Fed Fasting 30c D2.0115.CSV
+16,16wks-4,B6,Female,20.8,1.37,17.63,Pre,16wks,2022-03-15 B6 Fed Fasting 30c D2.0116.CSV
+1,8wks-1,B6,Male,25.2,0.95,22.96,Post,8wks,2022-03-15 B6 Fed Fasting 30c D2.0101.CSV
+2,16wks-1,B6,Male,26.3,1.75,23.07,Post,16wks,2022-03-15 B6 Fed Fasting 30c D2.0102.CSV
+3,16wks-2,B6,Male,27.2,0.54,25.18,Post,16wks,2022-03-15 B6 Fed Fasting 30c D2.0103.CSV
+4,8wks-2,B6,Male,22.5,0.51,20.67,Post,8wks,2022-03-15 B6 Fed Fasting 30c D2.0104.CSV
+5,16wks-3,B6,Male,25.7,0.51,20.67,Post,16wks,2022-03-15 B6 Fed Fasting 30c D2.0105.CSV
+6,8wks-3,B6,Male,22.8,0.74,20.59,Post,8wks,2022-03-15 B6 Fed Fasting 30c D2.0106.CSV
+7,16wks-4,B6,Male,28.9,1.21,25.99,Post,16wks,2022-03-15 B6 Fed Fasting 30c D2.0107.CSV
+8,8wks-4,B6,Male,25.4,0.12,23.78,Post,8wks,2022-03-15 B6 Fed Fasting 30c D2.0108.CSV
+9,8wks-1,B6,Female,16.5,0.24,14.91,Post,8wks,2022-03-15 B6 Fed Fasting 30c D2.0109.CSV
+10,16wks-1,B6,Female,20.5,1.96,17.24,Post,16wks,2022-03-15 B6 Fed Fasting 30c D2.0110.CSV
+11,8wks-2,B6,Female,15.3,0.98,12.98,Post,8wks,2022-03-15 B6 Fed Fasting 30c D2.0111.CSV
+12,16wks-2,B6,Female,24,3.83,18.37,Post,16wks,2022-03-15 B6 Fed Fasting 30c D2.0112.CSV
+13,16wks-3,B6,Female,20.9,2.09,17.23,Post,16wks,2022-03-15 B6 Fed Fasting 30c D2.0113.CSV
+14,8wks-3,B6,Female,17.7,0.68,15.55,Post,8wks,2022-03-15 B6 Fed Fasting 30c D2.0114.CSV
+15,8wks-4,B6,Female,15.7,0.83,13.46,Post,8wks,2022-03-15 B6 Fed Fasting 30c D2.0115.CSV
+16,16wks-4,B6,Female,17.9,0.58,15.95,Post,16wks,2022-03-15 B6 Fed Fasting 30c D2.0116.CSV
