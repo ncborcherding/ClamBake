@@ -27,6 +27,17 @@ dat.fast <- load.data(file.dir = dir.to.use,
                  contrast = "Condition",
                       baseline = "Pre")
 
+
+  
+
+full.data <- merge.data(list(dat.fed,dat.fast,dat.30,dat.25,dat.25,dat.20,dat.15,dat.10,dat.5))
+```
+
+##################################
+#Estimating Adaptive Thermogenesis
+##################################
+
+```{r}
 dir.to.use <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/cage_data/2022-03-22 30C"
 meta.file <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/30.meta.csv"
 
@@ -74,11 +85,22 @@ dat.5 <- load.data(file.dir = dir.to.use,
                  meta.file = meta.file, 
                  contrast = "Condition",
                       baseline = "Pre")
-  
 
-full.data <- merge.data(list(dat.fed,dat.fast,dat.30,dat.25,dat.25,dat.20,dat.15,dat.10,dat.5))
+AThermo.data <- merge.data(list(dat.30,dat.25,dat.25,dat.20,dat.15,dat.10,dat.5))
 ```
 
+
+
+```{r}
+run.data <- bind_rows(AThermo.data$cage_data)
+
+plot(run.data$VO2, run.data$Heat)
+```
+
+
+
+##################
+#Visualizations
 ```{r}
 source("~/Documents/GitHub/ClamBake/R/plot.track.R")
 
