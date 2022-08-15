@@ -98,7 +98,13 @@ library(EnvStats)
 library(caret)
 library(kernlab)
 library(mgcv)
+library(LiblineaR)
+library(deepboost)
 library(ggpmisc)
+library(dplyr)
+library(ggplot2)
+library(viridis)
+library(glmnet)
 formula <- y ~ x
 
 full.data <- merge.data(list(dat.fed,dat.fast,dat.30,dat.25,dat.25,dat.20,dat.15,dat.10,dat.5))
@@ -127,34 +133,24 @@ tr.data <- sample(nrow(indep.vairables), nrow(indep.vairables)*0.7)
 train.set <- indep.vairables[tr.data,]
 test.set <- indep.vairables[-tr.data,]
 
-model.performance <-NULL
-model.method <- c("lm", "glm", "bam", "gam", "svmLinear", "svmPoly")
+model.list <- list()
+model.method <- c("glm", "bam", "gam", "glmnet","rlm")
 for (i in seq_along(model.method)) {
-  if (i == 1) {
-    train.control <- trainControl(method = "boot", number = 1000)
-  } else {
     train_control <- trainControl(method="repeatedcv", number=10, repeats=20)
-  }
   
   model <- train(Heat ~ Feed + Drink + Ambulation + Temp.Delta,
                  method = model.method[i],
                  data = train.set, 
-                 trControl = train.control)
+                 trControl = train_control)
   
   heat.predict <- predict(model, test.set)
-  if(i %in% c(2)) {
-    perf <- model$finalModel$coefficients
-  } else {
-    perf <- summary(model)[[4]][,1]
-  }
-  out.tmp <- unlist(c(method = model.method[i], model$results, perf))
-  model.performance <- rbind(model.performance, out.tmp)
+  model.list[[i]] <- model
   
   df <- cbind.data.frame(test.set, heat.predict)
   
   ggplot(df, aes(x=Heat, y = heat.predict)) + 
     geom_point(aes(fill = Temp.Delta), shape = 21, stroke = 0.1) + 
-    geom_smooth(method='lm', formula= y~x, color = "black") + 
+    geom_smooth(method='lm', formula= y~x, color = "black", se = TRUE) + 
     stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
                label.x.npc = "right", label.y.npc = 0.15,
                formula = formula, parse = TRUE, size = 3) + 
@@ -163,60 +159,39 @@ for (i in seq_along(model.method)) {
     guides(fill = "none")
   ggsave(paste0("model.", model.method[i], ".pdf"), height = 4, width = 4)
   rm(model)
-
 }
-write.csv(model.performance, "model.performance.csv")
+saveRDS(model.list, "trained.models.rds")
 ```
 
 
+
 ```{r}
-full.data <- merge.data(list(dat.fed,dat.fast))
-data.cage <- bind_rows(full.data[[1]])
+model.list <- readRDS("trained.models.rds")
+gam.model <- model.list[[3]]
+bam.model <- model.list[[2]]
+glm.model <- model.list[[1]]
+rlm.model <- model.list[[5]]
+glmnet <- model.list[[4]]
 
-outliers <- NULL
-for(i in 1:4) {
-  x <- rosnerTest(as.matrix(indep.vairables[,i]), k = 5)$all.stats
-  x <- x[x$Value >= 1,]
-  x <- x[x$Outlier == TRUE,]
-  x <- x$Obs.Num
-  outliers <- c(outliers, x)
-}
-outliers <- unique(outliers)
+predict(glm.model, test.set[1,])
+test.set$Heat[1]
 
-data.cage <- data.cage[-outliers,]
+test.set[1,]$Feed* 5.62 + test.set[1,]$Drink*0.4986 + test.set[1,]$Ambulation* 0.3769 + test.set[1,]$Temp.Delta*7.5 + 49.9
+```
+
+
+
+```{r}
 indep.vairables <- data.cage[,c("Feed", "Drink", "Heat")]
 indep.vairables <- indep.vairables %>%
    mutate("Ambulation" = sqrt(data.cage$Xamb^2 + data.cage$Yamb^2)) %>%
-  mutate("Temp.Delta" = data.cage$Enclosure_temp - data.cage$Cage_temp)
+  mutate("Temp.Delta" = 30-data.cage$Cage_temp)
 
-set.seed(1234)
-tr.data <- sample(nrow(indep.vairables), nrow(indep.vairables)*0.7)
-train.set <- indep.vairables[tr.data,]
-test.set <- indep.vairables[-tr.data,]
-
-train.control <- trainControl(method = "boot", number = 1000)
-model <- train(Heat ~ Feed + Drink + Ambulation + Temp.Delta,
-               method = "lm",
-               data = train.set, 
-               trControl = train.control)
-
-heat.predict <- predict(model, test.set)
-df <- data.frame(heat.predict, heat.actual = test.set$Heat)
-ggplot(df, aes(heat.predict, heat.actual)) + 
-  geom_point() + 
-   geom_smooth(method = "lm", se=FALSE) +
-  geom_text(x = 2, y = 50, label = eq(df$heat.predict,df$heat.actual), parse = TRUE) + 
-  theme_classic()
-```
-
-
-```{r}
-full.data <- merge.data(list(dat.fed,dat.fast))
-data.cage <- bind_rows(full.data[[1]])
+#indep.vairables[,5] <- -indep.vairables[,5]
 
 outliers <- NULL
-for(i in 1:4) {
-  x <- rosnerTest(as.matrix(indep.vairables[,i]), k = 5)$all.stats
+for(i in c(1,2,3,5)) {
+  x <- rosnerTest(as.matrix(indep.vairables[,]), k = 5)$all.stats
   x <- x[x$Value >= 1,]
   x <- x[x$Outlier == TRUE,]
   x <- x$Obs.Num
@@ -224,84 +199,211 @@ for(i in 1:4) {
 }
 outliers <- unique(outliers)
 
-data.cage <- data.cage[-outliers,]
-indep.vairables <- data.cage[,c("Feed", "Drink", "Heat")]
-indep.vairables <- indep.vairables %>%
-   mutate("Ambulation" = sqrt(data.cage$Xamb^2 + data.cage$Yamb^2)/1000) %>%
-  mutate("Temp.Delta" = (data.cage$Enclosure_temp - data.cage$Cage_temp)/10)
+indep.vairables <- indep.vairables[-outliers,]
+
+indep.vairables[,c(1,2,4)] <- sqrt(indep.vairables[,c(1,2,4)])
 
 set.seed(1234)
 tr.data <- sample(nrow(indep.vairables), nrow(indep.vairables)*0.7)
 train.set <- indep.vairables[tr.data,]
 test.set <- indep.vairables[-tr.data,]
 
-train.control <- trainControl(method = "boot", number = 1000)
-model <- train(Heat ~ Feed + Drink + Ambulation + Temp.Delta,
-               method = "lm",
-               data = train.set, 
-               trControl = train.control)
-
-heat.predict <- predict(model, test.set)
-df <- data.frame(heat.predict, heat.actual = test.set$Heat)
-ggplot(df, aes(heat.predict, heat.actual)) + 
-  geom_point() + 
-   geom_smooth(method = "lm", se=FALSE) +
-  geom_text(x = 2, y = 50, label = eq(df$heat.predict,df$heat.actual), parse = TRUE) + 
-  theme_classic()
+train.control <- trainControl(method="repeatedcv", number=10, repeats=20)
+  
+  model <- train(Heat ~ Feed + Drink + Ambulation + Temp.Delta,
+                 method = "glm",
+                 data = train.set, 
+                 trControl = train.control)
+  
+  heat.predict <- predict(model, test.set)
+  
+  df <- cbind.data.frame(test.set, heat.predict)
+  
+  ggplot(df, aes(x=Heat, y = heat.predict)) + 
+    geom_point(aes(fill = Temp.Delta^2), shape = 21, stroke = 0.1) + 
+    geom_smooth(method='lm', formula= y~x, color = "black") + 
+    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "right", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3) + 
+    scale_fill_viridis(option = "H") + 
+    theme_classic() + 
+    guides(fill = "none")
+  ggsave(paste0("model.", "sqrt.negative.tmp", ".pdf"), height = 4, width = 4)
+  
+  
 ```
-```{r}
-full.data <- merge.data(list(dat.30,dat.25,dat.25,dat.20,dat.15,dat.10,dat.5))
-data.cage <- bind_rows(full.data[[1]])
 
-outliers <- NULL
-for(i in 1:4) {
-  x <- rosnerTest(as.matrix(indep.vairables[,i]), k = 5)$all.stats
-  x <- x[x$Value >= 1,]
-  x <- x[x$Outlier == TRUE,]
-  x <- x$Obs.Num
-  outliers <- c(outliers, x)
-}
-outliers <- unique(outliers)
-
-data.cage <- data.cage[-outliers,]
-indep.vairables <- data.cage[,c("Feed", "Drink", "Heat")]
-indep.vairables <- indep.vairables %>%
-   mutate("Ambulation" = sqrt(data.cage$Xamb^2 + data.cage$Yamb^2)/1000) %>%
-  mutate("Temp.Delta" = (data.cage$Enclosure_temp - data.cage$Cage_temp)/10)
-
-set.seed(1234)
-tr.data <- sample(nrow(indep.vairables), nrow(indep.vairables)*0.7)
-train.set <- indep.vairables[tr.data,]
-test.set <- indep.vairables[-tr.data,]
-
-train.control <- trainControl(method = "boot", number = 1000)
-model <- train(Heat ~ Feed + Drink + Ambulation + Temp.Delta,
-               method = "lm",
-               data = train.set, 
-               trControl = train.control)
-
-heat.predict <- predict(model, test.set)
-df <- data.frame(heat.predict, heat.actual = test.set$Heat)
-ggplot(df, aes(heat.predict, heat.actual)) + 
-  geom_point() + 
-   geom_smooth(method = "lm", se=FALSE) +
-  geom_text(x = 2, y = 50, label = eq(df$heat.predict,df$heat.actual), parse = TRUE) + 
-  theme_classic()
-```
 
 ```{r}
-eq <- function(x,y) {
-  m <- lm(y ~ x)
-  as.character(
-    as.expression(
-      substitute(italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2,
-                list(a = format(coef(m)[1], digits = 4),
-                b = format(coef(m)[2], digits = 4),
-                r2 = format(summary(m)$r.squared, digits = 3)))
-    )
-  )
+cage.data <- full.data
+estimate.EE <- function(cage.data, 
+                        group.by = "Interval_num", 
+                        split.by = NULL,
+                        sample.subset = NULL, 
+                        remove.outliers = TRUE) {
+  
+  if(!is.null(sample.subset)) {
+    cage.data <- subset.data(cage.data, sample.subset)
+  }
+  if(!is.null(group.by) | !is.null(split.by)) {
+    if (group.by == "Interval_num") {
+       pre.plot.dat <- pull.dat(c(split.by), cage.data)
+    } else {
+      pre.plot.dat <- pull.dat(c(group.by, split.by), cage.data)
+    }
+    num.vals <- length(c(group.by, split.by))
+    if(num.vals == 1) {
+      if(!is.null(split.by)) {
+        colnames(pre.plot.dat)[ncol(pre.plot.dat)] <- "split.by"
+      } else {
+        colnames(pre.plot.dat)[ncol(pre.plot.dat)] <- "group.by"
+      }
+    }
+  }
+  indep.vairables <- pre.plot.dat[,c("Feed", "Drink", "Heat")]
+  indep.vairables <- indep.vairables %>%
+     mutate("Ambulation" = sqrt(pre.plot.dat$Xamb^2 + pre.plot.dat$Yamb^2)) %>%
+    mutate("Temp.Delta" = pre.plot.dat$Cage_temp-30)
+  
+  if(!is.null(group.by)) {
+    indep.vairables[,"group.by"] <- pre.plot.dat[,group.by]
+  }
+  if(!is.null(split.by)) {
+    indep.vairables[,"split.by"] <- pre.plot.dat[,split.by]
+  }
+  
+  if(remove.outliers) {
+    outliers <- NULL
+    for(i in c(1,2,3,5)) {
+      x <- rosnerTest(as.matrix(indep.vairables[,i]), k = 5)$all.stats
+      x <- x[x$Value >= 1,]
+      x <- x[x$Outlier == TRUE,]
+      x <- x$Obs.Num
+      outliers <- c(outliers, x)
+    }
+    outliers <- unique(outliers)
+    if(length(outliers) > 0) {
+      indep.vairables <- indep.vairables[-outliers,]
+    }
+  }
+  indep.vairables[,"Ambulation"] <- sqrt(indep.vairables[,"Ambulation"])
+  
+  EE.estimates <- bin.energy(indep.vairables, group.by, split.by)
+  min <- min(as.numeric(EE.estimates$group.by))
+  max <- max(as.numeric(EE.estimates$group.by))
+  EE.estimates$group.by <- factor(EE.estimates$group.by, levels = min:max)
+  EE.estimates[,1:7] <- sapply(EE.estimates[,1:7], as.numeric)
+  #EE.estimates <- as.data.frame(EE.estimates)
+  EE.summary <- EE.estimates %>%
+    group_by(group.by) %>%
+    summarise(across(1:7, mean))
+  
+  melted <- reshape2::melt(EE.summary[,1:5], id.vars = 1)
+  
+  melted$variable <- factor(melted$variable, levels = c("AT", "TEF", "Act", "BMR"))
+  plot <- ggplot(melted, aes(x=as.numeric(group.by), y =as.numeric(value), fill = variable )) + 
+    stat_smooth(
+      geom = 'area', position = "stack", method = 'loess', span = 1/3,
+       alpha = 1/2) + 
+    #geom_bar(stat = "identity") + 
+    scale_fill_viridis(option = "H", discrete = TRUE) + 
+    theme_classic() + 
+    ylab("Heat") + 
+    xlab("Time Interval")
+  return(plot)
 }
+
+estimate.EE(dat.30)+ 
+  ylim(0,35)
+ggsave("t30.byinterval_area.pdf", height = 4, width = 6) 
+  
 ```
+
+```{r}
+estimate.EE.grouped <- function(cage.data, 
+                        group.by = "Interval_num", 
+                        split.by = NULL,
+                        sample.subset = NULL, 
+                        remove.outliers = TRUE) {
+  
+  if(!is.null(sample.subset)) {
+    cage.data <- subset.data(cage.data, sample.subset)
+  }
+  if(!is.null(group.by) | !is.null(split.by)) {
+    if (group.by == "Interval_num") {
+       pre.plot.dat <- pull.dat(c(split.by), cage.data)
+    } else {
+      pre.plot.dat <- pull.dat(c(group.by, split.by), cage.data)
+    }
+    num.vals <- length(c(group.by, split.by))
+    if(num.vals == 1) {
+      if(!is.null(split.by)) {
+        colnames(pre.plot.dat)[ncol(pre.plot.dat)] <- "split.by"
+      } else {
+        colnames(pre.plot.dat)[ncol(pre.plot.dat)] <- "group.by"
+      }
+    }
+  }
+  indep.vairables <- pre.plot.dat[,c("Feed", "Drink", "Heat")]
+  indep.vairables <- indep.vairables %>%
+     mutate("Ambulation" = sqrt(pre.plot.dat$Xamb^2 + pre.plot.dat$Yamb^2)) %>%
+    mutate("Temp.Delta" = pre.plot.dat$Cage_temp-30)
+  
+  if(!is.null(group.by)) {
+    indep.vairables[,"group.by"] <- pre.plot.dat[,group.by]
+  }
+  if(!is.null(split.by)) {
+    indep.vairables[,"split.by"] <- pre.plot.dat[,split.by]
+  }
+  
+  if(remove.outliers) {
+    outliers <- NULL
+    for(i in c(1,2,3,5)) {
+      x <- rosnerTest(as.matrix(indep.vairables[,i]), k = 5)$all.stats
+      x <- x[x$Value >= 1,]
+      x <- x[x$Outlier == TRUE,]
+      x <- x$Obs.Num
+      outliers <- c(outliers, x)
+    }
+    outliers <- unique(outliers)
+    if(length(outliers) > 0) {
+      indep.vairables <- indep.vairables[-outliers,]
+    }
+  }
+  indep.vairables[,"Ambulation"] <- sqrt(indep.vairables[,"Ambulation"])
+  
+  EE.estimates <- bin.energy(indep.vairables, group.by, split.by)
+  EE.estimates$group.by <- as.factor(EE.estimates$group.by)
+  EE.estimates[,1:7] <- sapply(EE.estimates[,1:7], as.numeric)
+  #EE.estimates <- as.data.frame(EE.estimates)
+  EE.summary <- EE.estimates %>%
+    summarise(across(1:7, mean)) %>%
+    t() %>%
+    as.data.frame()
+  variables <- rownames(EE.summary)[1:4]
+  EE.summary <- EE.summary[1:4,]
+  
+  EE.summary <- as.data.frame(EE.summary)
+  EE.summary$variable <- variables
+  
+  EE.summary$variable <- factor(EE.summary$variable, levels = c("AT", "TEF", "Act", "BMR"))
+  plot <- ggplot(EE.summary, aes(x = 1, y =EE.summary, fill = variable )) + 
+    geom_bar(stat = "identity") + 
+    scale_fill_viridis(option = "H", discrete = TRUE) + 
+    theme_classic() + 
+    ylab("Heat") + 
+    theme(axis.title.x = element_blank(),
+          axis.ticks.x = element_blank(),
+          axis.text.x = element_blank())
+  return(plot)
+}
+estimate.EE.grouped(dat.30) + 
+  ylim(0,30)
+ggsave("grouped.30.pdf", height = 3, width = 2)
+```
+
+
+
 
 
 ##################
@@ -309,9 +411,8 @@ eq <- function(x,y) {
 ```{r}
 source("~/Documents/GitHub/ClamBake/R/plot.track.R")
 
-plot.track(full.data, 
-            group.by = "Sex",
-            split.by = "Age",
-            y.axis = "VO2") 
+plot.track(dat.10, 
+            y.axis = "Yamb", 
+           sample.subset = NULL) 
 ```
 

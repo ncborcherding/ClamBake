@@ -7,7 +7,7 @@ plot.track <- function(cage.data,
                        split.by = NULL,
                        y.axis = NULL,
                        sample.subset = NULL) {
-  if(!is.null(samples.subset)) {
+  if(!is.null(sample.subset)) {
     cage.data <- subset.data(cage.data, sample.subset)
   }
   if(!is.null(group.by) | !is.null(split.by)) {
