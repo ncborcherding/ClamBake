@@ -235,7 +235,7 @@ train.control <- trainControl(method="repeatedcv", number=10, repeats=20)
 
 
 ```{r}
-cage.data <- full.data
+cage.data <- dat.Atg
 estimate.EE <- function(cage.data, 
                         group.by = "Interval_num", 
                         split.by = NULL,
@@ -263,7 +263,7 @@ estimate.EE <- function(cage.data,
   indep.vairables <- pre.plot.dat[,c("Feed", "Drink", "Heat")]
   indep.vairables <- indep.vairables %>%
      mutate("Ambulation" = sqrt(pre.plot.dat$Xamb^2 + pre.plot.dat$Yamb^2)) %>%
-    mutate("Temp.Delta" = pre.plot.dat$Cage_temp-30)
+    mutate("Temp.Delta" = as.numeric(pre.plot.dat$Cage_temp)-30)
   
   if(!is.null(group.by)) {
     indep.vairables[,"group.by"] <- pre.plot.dat[,group.by]
@@ -288,6 +288,7 @@ estimate.EE <- function(cage.data,
   }
   indep.vairables[,"Ambulation"] <- sqrt(indep.vairables[,"Ambulation"])
   
+  indep.vairables <- na.omit(indep.vairables)
   EE.estimates <- bin.energy(indep.vairables, group.by, split.by)
   min <- min(as.numeric(EE.estimates$group.by))
   max <- max(as.numeric(EE.estimates$group.by))
@@ -403,6 +404,33 @@ ggsave("grouped.30.pdf", height = 3, width = 2)
 ```
 
 
+```{r}
+dir.to.use <- "./data_sets/Atg14\ mCre\ RT\ Cold\ CLAMS\ Data/cage_data/flox"
+meta.file <- "./data_sets/Atg14\ mCre\ RT\ Cold\ CLAMS\ Data/meta.flox.csv"
+
+meta <- read.csv(meta.file)
+dat.flox<- load.data(file.dir = dir.to.use,
+                 meta.file = meta.file, 
+                 equilibrate.interval = 8,
+                 contrast = NULL,
+                      baseline = NULL)
+
+
+
+
+dir.to.use <- "./data_sets/Atg14\ mCre\ RT\ Cold\ CLAMS\ Data/cage_data/mCre"
+meta.file <- "./data_sets/Atg14\ mCre\ RT\ Cold\ CLAMS\ Data/meta.mCre.csv"
+
+meta <- read.csv(meta.file)
+dat.cre <- load.data(file.dir = dir.to.use,
+                 meta.file = meta.file, 
+                 equilibrate.interval = 8,
+                 contrast = NULL,
+                      baseline = NULL)
+
+estimate.EE(dat.cre)
+estimate.EE(dat.flox) 
+```
 
 
 
