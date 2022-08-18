@@ -235,7 +235,7 @@ train.control <- trainControl(method="repeatedcv", number=10, repeats=20)
 
 
 ```{r}
-cage.data <- dat.Atg
+cage.data <- dat.cre
 estimate.EE <- function(cage.data, 
                         group.by = "Interval_num", 
                         split.by = NULL,
@@ -271,7 +271,7 @@ estimate.EE <- function(cage.data,
   if(!is.null(split.by)) {
     indep.vairables[,"split.by"] <- pre.plot.dat[,split.by]
   }
-  
+  indep.vairables <- na.omit(indep.vairables)
   if(remove.outliers) {
     outliers <- NULL
     for(i in c(1,2,3,5)) {
@@ -288,7 +288,7 @@ estimate.EE <- function(cage.data,
   }
   indep.vairables[,"Ambulation"] <- sqrt(indep.vairables[,"Ambulation"])
   
-  indep.vairables <- na.omit(indep.vairables)
+  
   EE.estimates <- bin.energy(indep.vairables, group.by, split.by)
   min <- min(as.numeric(EE.estimates$group.by))
   max <- max(as.numeric(EE.estimates$group.by))
@@ -303,10 +303,10 @@ estimate.EE <- function(cage.data,
   
   melted$variable <- factor(melted$variable, levels = c("AT", "TEF", "Act", "BMR"))
   plot <- ggplot(melted, aes(x=as.numeric(group.by), y =as.numeric(value), fill = variable )) + 
-    stat_smooth(
-      geom = 'area', position = "stack", method = 'loess', span = 1/3,
-       alpha = 1/2) + 
-    #geom_bar(stat = "identity") + 
+    #stat_smooth(
+    #  geom = 'area', position = "stack", method = 'loess', span = 1/3,
+    #   alpha = 1/2) + 
+    geom_bar(stat = "identity") + 
     scale_fill_viridis(option = "H", discrete = TRUE) + 
     theme_classic() + 
     ylab("Heat") + 
@@ -318,6 +318,17 @@ estimate.EE(dat.30)+
   ylim(0,35)
 ggsave("t30.byinterval_area.pdf", height = 4, width = 6) 
 
+formula= y~x
+ ggplot(EE.estimates, aes(x=as.numeric(measured.Heat), y = as.numeric(predict.Heat))) + 
+    geom_point( shape = 21, stroke = 0.1) + 
+    geom_smooth(method='lm', formula= y~x, color = "black") + 
+    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "right", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3) + 
+    scale_fill_viridis(option = "H") + 
+    theme_classic() + 
+    guides(fill = "none")
+ ggsave("Cre.mice.pdf", height = 3, width = 3)
 ```
 
 ```{r}
@@ -428,8 +439,12 @@ dat.cre <- load.data(file.dir = dir.to.use,
                  contrast = NULL,
                       baseline = NULL)
 
-estimate.EE(dat.cre)
-estimate.EE(dat.flox) 
+estimate.EE(dat.cre) + 
+  ylim(0,40)
+ggsave("grouped.Cre.pdf", height = 3, width = 4)
+estimate.EE(dat.flox)  + 
+  ylim(0,40)
+ggsave("grouped.Flox.pdf", height = 3, width = 4)
 ```
 
 
