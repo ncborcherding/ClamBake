@@ -235,7 +235,7 @@ train.control <- trainControl(method="repeatedcv", number=10, repeats=20)
 
 
 ```{r}
-cage.data <- dat.cre
+cage.data <- dat.flox
 estimate.EE <- function(cage.data, 
                         group.by = "Interval_num", 
                         split.by = NULL,
@@ -271,7 +271,9 @@ estimate.EE <- function(cage.data,
   if(!is.null(split.by)) {
     indep.vairables[,"split.by"] <- pre.plot.dat[,split.by]
   }
+  
   indep.vairables <- na.omit(indep.vairables)
+  indep.vairables <- indep.vairables[indep.vairables$Heat > 5,]
   if(remove.outliers) {
     outliers <- NULL
     for(i in c(1,2,3,5)) {
@@ -328,7 +330,7 @@ formula= y~x
     scale_fill_viridis(option = "H") + 
     theme_classic() + 
     guides(fill = "none")
- ggsave("Cre.mice.pdf", height = 3, width = 3)
+ ggsave("Flox.mice_v2.pdf", height = 3, width = 3)
 ```
 
 ```{r}
