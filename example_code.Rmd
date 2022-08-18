@@ -317,7 +317,7 @@ estimate.EE <- function(cage.data,
 estimate.EE(dat.30)+ 
   ylim(0,35)
 ggsave("t30.byinterval_area.pdf", height = 4, width = 6) 
-  
+
 ```
 
 ```{r}
