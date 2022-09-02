@@ -90,6 +90,19 @@ AThermo.data <- merge.data(list(dat.30,dat.25,dat.25,dat.20,dat.15,dat.10,dat.5)
 ```
 
 
+
+```{r}
+dir.to.use <- "./data_sets/2021-10-07\ C57BL\ WT\ Mice/cage_data"
+meta.file <- "./data_sets/2021-10-07\ C57BL\ WT\ Mice/meta.csv"
+
+dat.course <- load.data(file.dir = dir.to.use,
+                 meta.file = meta.file, 
+                 contrast = NULL,
+                      baseline = NULL)
+
+dat.course[[2]] <- dat.course[[2]][,colnames(dat.fast[[2]])]
+```
+
 ###############
 #Boot Strapping
 ##############
@@ -107,7 +120,13 @@ library(viridis)
 library(glmnet)
 formula <- y ~ x
 
-full.data <- merge.data(list(dat.fed,dat.fast,dat.30,dat.25,dat.25,dat.20,dat.15,dat.10,dat.5))
+#full.data <- merge.data(list(dat.fed,dat.fast,dat.30,dat.25,dat.25,dat.20,dat.15,dat.10,dat.5))
+full.data <- merge.data(list(dat.fed,dat.fast,dat.30, dat.course))
+for(i in seq_along(full.data[[1]])) {
+  full.data[[1]][[i]]$RH_ref <- as.character(full.data[[1]][[i]]$RH_ref)
+  full.data[[1]][[i]]$RH_cage <- as.character(full.data[[1]][[i]]$RH_cage)
+  full.data[[1]][[i]]$Cage_temp <- as.numeric(full.data[[1]][[i]]$Cage_temp)
+}
 data.cage <- bind_rows(full.data[[1]])
 
 indep.vairables <- data.cage[,c("Feed", "Drink", "Heat")]
@@ -186,7 +205,7 @@ indep.vairables <- data.cage[,c("Feed", "Drink", "Heat")]
 indep.vairables <- indep.vairables %>%
    mutate("Ambulation" = sqrt(data.cage$Xamb^2 + data.cage$Yamb^2)) %>%
   mutate("Temp.Delta" = 30-data.cage$Cage_temp)
-
+indep.vairables <- na.omit(indep.vairables)
 #indep.vairables[,5] <- -indep.vairables[,5]
 
 outliers <- NULL
@@ -201,7 +220,10 @@ outliers <- unique(outliers)
 
 indep.vairables <- indep.vairables[-outliers,]
 
-indep.vairables[,c(1,2,4)] <- sqrt(indep.vairables[,c(1,2,4)])
+indep.vairables[,c(4)] <- sqrt(indep.vairables[,c(4)])
+indep.vairables <- indep.vairables[indep.vairables$Heat > 5,]
+indep.vairables <- indep.vairables[indep.vairables$Temp.Delta >= -1.5,]
+indep.vairables <- indep.vairables[indep.vairables$Temp.Delta <= 1.5,]
 
 set.seed(1234)
 tr.data <- sample(nrow(indep.vairables), nrow(indep.vairables)*0.7)
@@ -210,7 +232,7 @@ test.set <- indep.vairables[-tr.data,]
 
 train.control <- trainControl(method="repeatedcv", number=10, repeats=20)
   
-  model <- train(Heat ~ Feed + Drink + Ambulation + Temp.Delta,
+  model <- train(Heat ~ Feed + Drink + Ambulation,
                  method = "glm",
                  data = train.set, 
                  trControl = train.control)
@@ -231,6 +253,61 @@ train.control <- trainControl(method="repeatedcv", number=10, repeats=20)
   ggsave(paste0("model.", "sqrt.negative.tmp", ".pdf"), height = 4, width = 4)
   
   
+```
+
+```{r}
+indep.vairables <- data.cage[,c("Feed", "Drink", "Heat", "RER", "Ztot")]
+indep.vairables <- indep.vairables %>%
+   mutate("Ambulation" = sqrt(data.cage$Xamb^2 + data.cage$Yamb^2)) %>%
+  mutate("Temp.Delta" = 30-data.cage$Cage_temp)
+indep.vairables <- na.omit(indep.vairables)
+#indep.vairables[,5] <- -indep.vairables[,5]
+
+indep.vairables[,c(5,6)] <- sqrt(indep.vairables[,c(5,6)])
+
+outliers <- NULL
+for(i in c(1,2,3,5)) {
+  x <- rosnerTest(as.matrix(indep.vairables[,]), k = 5)$all.stats
+  x <- x[x$Value >= 1,]
+  x <- x[x$Outlier == TRUE,]
+  x <- x$Obs.Num
+  outliers <- c(outliers, x)
+}
+outliers <- unique(outliers)
+
+indep.vairables <- indep.vairables[-outliers,]
+
+
+indep.vairables <- indep.vairables[indep.vairables$Heat > 5,]
+indep.vairables <- indep.vairables[indep.vairables$Temp.Delta >= -1.5,]
+indep.vairables <- indep.vairables[indep.vairables$Temp.Delta <= 1.5,]
+
+set.seed(1234)
+tr.data <- sample(nrow(indep.vairables), nrow(indep.vairables)*0.7)
+train.set <- indep.vairables[tr.data,]
+test.set <- indep.vairables[-tr.data,]
+
+train.control <- trainControl(method="repeatedcv", number=10, repeats=20)
+  
+  model <- train(Heat ~ Feed + Drink + Ambulation + RER + Ztot + Temp.Delta,
+                 method = "gam",
+                 data = train.set, 
+                 trControl = train.control)
+
+  
+  heat.predict <- predict(model, test.set)
+  
+  df <- cbind.data.frame(test.set, heat.predict)
+  
+  ggplot(df, aes(x=Heat, y = heat.predict)) + 
+    geom_point(aes(fill = Temp.Delta^2), shape = 21, stroke = 0.1) + 
+    geom_smooth(method='lm', formula= y~x, color = "black") + 
+    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "right", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3) + 
+    scale_fill_viridis(option = "H") + 
+    theme_classic() + 
+    guides(fill = "none")
 ```
 
 
