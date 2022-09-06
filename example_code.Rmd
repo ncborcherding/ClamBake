@@ -90,6 +90,44 @@ AThermo.data <- merge.data(list(dat.30,dat.25,dat.25,dat.20,dat.15,dat.10,dat.5)
 ```
 
 
+#Isothermal estimation
+```{r}
+dir.to.use <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/cage_data/2022-03-22 30C"
+meta.file <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/30.meta2.csv"
+
+dat.30 <- load.data(file.dir = dir.to.use,
+                 meta.file = meta.file)
+
+for (i in seq_along(dat.30[[1]])) {
+  dat.30[[1]][[i]]$Weight <- dat.30[[2]][i,"Weight"]
+  dat.30[[1]][[i]]$Lean.Mass <- dat.30[[2]][i,"Lean.mass"]
+}
+
+dir.to.use <- "./data_sets/2022-03-14 B6 Fed Fasting 30C Metabolic Data/cage_data/2022-03-14 D1 Feed"
+meta.file <- "./data_sets/2022-03-14 B6 Fed Fasting 30C Metabolic Data/feed.meta2.csv"
+
+meta <- read.csv(meta.file)
+dat.fed <- load.data(file.dir = dir.to.use,
+                 meta.file = meta.file, 
+                 equilibrate.interval = 8)
+
+for (i in seq_along(dat.fed[[1]])) {
+  dat.fed[[1]][[i]]$Weight <- dat.fed[[2]][i,"Weight"]
+  dat.fed[[1]][[i]]$Lean.Mass <- dat.fed[[2]][i,"Lean.mass"]
+}
+
+dir.to.use <- "./data_sets/2022-03-14 B6 Fed Fasting 30C Metabolic Data/cage_data/2022-03-15 D2 Fasting"
+meta.file <- "./data_sets/2022-03-14 B6 Fed Fasting 30C Metabolic Data/fast.meta2.csv"
+
+dat.fast <- load.data(file.dir = dir.to.use,
+                 meta.file = meta.file)
+
+for (i in seq_along(dat.fast[[1]])) {
+  dat.fast[[1]][[i]]$Weight <- dat.fast[[2]][i,"Weight"]
+  dat.fast[[1]][[i]]$Lean.Mass <- dat.fast[[2]][i,"Lean.mass"]
+}
+```
+
 
 ```{r}
 dir.to.use <- "./data_sets/2021-10-07\ C57BL\ WT\ Mice/cage_data"
@@ -121,7 +159,7 @@ library(glmnet)
 formula <- y ~ x
 
 #full.data <- merge.data(list(dat.fed,dat.fast,dat.30,dat.25,dat.25,dat.20,dat.15,dat.10,dat.5))
-full.data <- merge.data(list(dat.fed,dat.fast,dat.30, dat.course))
+full.data <- merge.data(list(dat.fed,dat.fast,dat.30))
 for(i in seq_along(full.data[[1]])) {
   full.data[[1]][[i]]$RH_ref <- as.character(full.data[[1]][[i]]$RH_ref)
   full.data[[1]][[i]]$RH_cage <- as.character(full.data[[1]][[i]]$RH_cage)
@@ -129,7 +167,7 @@ for(i in seq_along(full.data[[1]])) {
 }
 data.cage <- bind_rows(full.data[[1]])
 
-indep.vairables <- data.cage[,c("Feed", "Drink", "Heat")]
+indep.vairables <- data.cage[,c("Feed", "Drink", "Heat", "Weight", "Lean.Mass")]
 indep.vairables <- indep.vairables %>%
    mutate("Ambulation" = sqrt(data.cage$Xamb^2 + data.cage$Yamb^2)) %>%
   mutate("Temp.Delta" = data.cage$Cage_temp)
@@ -201,7 +239,8 @@ test.set[1,]$Feed* 5.62 + test.set[1,]$Drink*0.4986 + test.set[1,]$Ambulation* 0
 
 
 ```{r}
-indep.vairables <- data.cage[,c("Feed", "Drink", "Heat")]
+#indep.vairables <- data.cage[,c("Feed", "Drink", "Heat", "Weight", "Lean.Mass")]
+indep.vairables <- data.cage[,-38]
 indep.vairables <- indep.vairables %>%
    mutate("Ambulation" = sqrt(data.cage$Xamb^2 + data.cage$Yamb^2)) %>%
   mutate("Temp.Delta" = 30-data.cage$Cage_temp)
@@ -209,7 +248,7 @@ indep.vairables <- na.omit(indep.vairables)
 #indep.vairables[,5] <- -indep.vairables[,5]
 
 outliers <- NULL
-for(i in c(1,2,3,5)) {
+for(i in c(1,2,3,5,6,7)) {
   x <- rosnerTest(as.matrix(indep.vairables[,]), k = 5)$all.stats
   x <- x[x$Value >= 1,]
   x <- x[x$Outlier == TRUE,]
@@ -220,7 +259,8 @@ outliers <- unique(outliers)
 
 indep.vairables <- indep.vairables[-outliers,]
 
-indep.vairables[,c(4)] <- sqrt(indep.vairables[,c(4)])
+indep.vairables[,"Ambulation"] <- sqrt(indep.vairables[,"Ambulation"])
+#indep.vairables[,c(4,5)] <- sqrt(indep.vairables[,c(4,5)])
 indep.vairables <- indep.vairables[indep.vairables$Heat > 5,]
 indep.vairables <- indep.vairables[indep.vairables$Temp.Delta >= -1.5,]
 indep.vairables <- indep.vairables[indep.vairables$Temp.Delta <= 1.5,]
@@ -232,7 +272,7 @@ test.set <- indep.vairables[-tr.data,]
 
 train.control <- trainControl(method="repeatedcv", number=10, repeats=20)
   
-  model <- train(Heat ~ Feed + Drink + Ambulation,
+  model <- train(Heat ~ Feed + Ambulation + Weight,
                  method = "glm",
                  data = train.set, 
                  trControl = train.control)
@@ -240,9 +280,9 @@ train.control <- trainControl(method="repeatedcv", number=10, repeats=20)
   heat.predict <- predict(model, test.set)
   
   df <- cbind.data.frame(test.set, heat.predict)
-  
+  formula <- y ~ x
   ggplot(df, aes(x=Heat, y = heat.predict)) + 
-    geom_point(aes(fill = Temp.Delta^2), shape = 21, stroke = 0.1) + 
+    geom_point(stroke = 0.1) + 
     geom_smooth(method='lm', formula= y~x, color = "black") + 
     stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
                label.x.npc = "right", label.y.npc = 0.15,
@@ -250,9 +290,19 @@ train.control <- trainControl(method="repeatedcv", number=10, repeats=20)
     scale_fill_viridis(option = "H") + 
     theme_classic() + 
     guides(fill = "none")
-  ggsave(paste0("model.", "sqrt.negative.tmp", ".pdf"), height = 4, width = 4)
+  ggsave("glm.WeightDelta.pdf", height = 4, width = 4)
   
-  
+
+train.set$Residuals <- model$finalModel$residuals
+train.set2 <- train.set[,-c(1:3,18,28:30,34:37)]
+
+corr <- cor(as.matrix(train.set2))
+
+pdf("corrplot.pdf", height = 10, width = 10)
+corrplot(corr, type = "upper", order = "hclust", 
+         tl.col = "black", tl.srt = 45, 
+         col = rev(COL2('RdBu', 200)))
+dev.off()
 ```
 
 ```{r}
@@ -298,7 +348,7 @@ train.control <- trainControl(method="repeatedcv", number=10, repeats=20)
   heat.predict <- predict(model, test.set)
   
   df <- cbind.data.frame(test.set, heat.predict)
-  
+  formula <- y ~ x
   ggplot(df, aes(x=Heat, y = heat.predict)) + 
     geom_point(aes(fill = Temp.Delta^2), shape = 21, stroke = 0.1) + 
     geom_smooth(method='lm', formula= y~x, color = "black") + 

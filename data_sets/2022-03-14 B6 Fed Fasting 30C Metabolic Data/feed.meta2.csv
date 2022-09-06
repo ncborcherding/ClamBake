@@ -1,0 +1,17 @@
+CLAMS,Ear tag,Genotype,Sex,Weight,Fat mass,Lean mass,Condition,Age,filename
+1,8wks-1,B6,Male,28.8,1.83,25.21,Pre,8wks,2022-03-14 B6 Fasting.0101.CSV
+2,16wks-1,B6,Male,29.1,2.81,24.78,Pre,16wks,2022-03-14 B6 Fasting.0102.CSV
+3,16wks-2,B6,Male,30.4,1.43,27.55,Pre,16wks,2022-03-14 B6 Fasting.0103.CSV
+4,8wks-2,B6,Male,25.2,1.19,22.96,Pre,8wks,2022-03-14 B6 Fasting.0104.CSV
+5,16wks-3,B6,Male,30.4,0.99,27.77,Pre,16wks,2022-03-14 B6 Fasting.0105.CSV
+6,8wks-3,B6,Male,25.5,1.56,22.54,Pre,8wks,2022-03-14 B6 Fasting.0106.CSV
+7,16wks-4,B6,Male,31.8,1.95,28.14,Pre,16wks,2022-03-14 B6 Fasting.0107.CSV
+8,8wks-4,B6,Male,28.8,1.2,26.03,Pre,8wks,2022-03-14 B6 Fasting.0108.CSV
+9,8wks-1,B6,Female,18.8,1.01,16.46,Pre,8wks,2022-03-14 B6 Fasting.0109.CSV
+10,16wks-1,B6,Female,22.5,2.51,18.48,Pre,16wks,2022-03-14 B6 Fasting.0110.CSV
+11,8wks-2,B6,Female,17.7,1.72,14.73,Pre,8wks,2022-03-14 B6 Fasting.0111.CSV
+12,16wks-2,B6,Female,25.5,4.73,19.22,Pre,16wks,2022-03-14 B6 Fasting.0112.CSV
+13,16wks-3,B6,Female,23.8,2.99,19.39,Pre,16wks,2022-03-14 B6 Fasting.0113.CSV
+14,8wks-3,B6,Female,20.1,1.44,17.26,Pre,8wks,2022-03-14 B6 Fasting.0114.CSV
+15,8wks-4,B6,Female,18.7,1.56,15.14,Pre,8wks,2022-03-14 B6 Fasting.0115.CSV
+16,16wks-4,B6,Female,20.8,1.45,18.01,Pre,16wks,2022-03-14 B6 Fasting.0116.CSV
