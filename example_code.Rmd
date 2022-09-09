@@ -101,6 +101,7 @@ dat.30 <- load.data(file.dir = dir.to.use,
 for (i in seq_along(dat.30[[1]])) {
   dat.30[[1]][[i]]$Weight <- dat.30[[2]][i,"Weight"]
   dat.30[[1]][[i]]$Lean.Mass <- dat.30[[2]][i,"Lean.mass"]
+  dat.30[[1]][[i]]$Fat.Mass <- dat.30[[2]][i,"Fat.mass"]
 }
 
 dir.to.use <- "./data_sets/2022-03-14 B6 Fed Fasting 30C Metabolic Data/cage_data/2022-03-14 D1 Feed"
@@ -114,6 +115,7 @@ dat.fed <- load.data(file.dir = dir.to.use,
 for (i in seq_along(dat.fed[[1]])) {
   dat.fed[[1]][[i]]$Weight <- dat.fed[[2]][i,"Weight"]
   dat.fed[[1]][[i]]$Lean.Mass <- dat.fed[[2]][i,"Lean.mass"]
+  dat.fed[[1]][[i]]$Fat.Mass <- dat.fed[[2]][i,"Fat.mass"]
 }
 
 dir.to.use <- "./data_sets/2022-03-14 B6 Fed Fasting 30C Metabolic Data/cage_data/2022-03-15 D2 Fasting"
@@ -125,6 +127,7 @@ dat.fast <- load.data(file.dir = dir.to.use,
 for (i in seq_along(dat.fast[[1]])) {
   dat.fast[[1]][[i]]$Weight <- dat.fast[[2]][i,"Weight"]
   dat.fast[[1]][[i]]$Lean.Mass <- dat.fast[[2]][i,"Lean.mass"]
+  dat.fast[[1]][[i]]$Fat.Mass <- dat.fast[[2]][i,"Fat.mass"]
 }
 ```
 
@@ -272,7 +275,7 @@ test.set <- indep.vairables[-tr.data,]
 
 train.control <- trainControl(method="repeatedcv", number=10, repeats=20)
   
-  model <- train(Heat ~ Feed + Ambulation + Weight,
+  model <- train(Heat ~ Feed + Ambulation + Fat.Mass + Lean.Mass + Weight,
                  method = "glm",
                  data = train.set, 
                  trControl = train.control)
