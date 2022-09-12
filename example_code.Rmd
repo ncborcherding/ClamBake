@@ -310,8 +310,62 @@ model.glm <- train(Heat ~ Ambulation + Feed + Weight,
 saveRDS(model.spline, file = "./models/model.spline.rds")
 saveRDS(model.gam, file = "./models/model.gam.rds")
 saveRDS(model.glm, file = "./models/model.glm.rds")
+```
 
+Examining the model performance 
 
+```{r}  
+  heat.predict <- predict(model.gam, test.set)
+  
+  df <- cbind.data.frame(test.set, heat.predict)
+  formula <- y ~ x
+  ggplot(df, aes(x=Heat, y = heat.predict)) + 
+    geom_point(stroke = 0.1) + 
+    geom_smooth(method='lm', formula= y~x, color = "red", lwd = 1) + 
+    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "right", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3) + 
+    scale_fill_viridis(option = "H") + 
+    theme_classic() + 
+    guides(fill = "none")
+  ggsave("GAM.Model.pdf", height = 4, width = 4)
+  
+  
+  heat.predict <- predict(model.glm, test.set)
+  df <- cbind.data.frame(test.set, heat.predict)
+  formula <- y ~ x
+  ggplot(df, aes(x=Heat, y = heat.predict)) + 
+    geom_point(stroke = 0.1) + 
+    geom_smooth(method='lm', formula= y~x, color = "red", lwd = 1) + 
+    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "right", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3) + 
+    scale_fill_viridis(option = "H") + 
+    theme_classic() + 
+    guides(fill = "none")
+  ggsave("GLM.Model.pdf", height = 4, width = 4)
+  
+    heat.predict <- predict(model.spline, test.set)
+    heat.predict[heat.predict < 0] <- NA
+  df <- cbind.data.frame(test.set, heat.predict)
+  formula <- y ~ x
+  ggplot(df, aes(x=Heat, y = heat.predict)) + 
+    geom_point(stroke = 0.1) + 
+    geom_smooth(method='lm', formula= y~x, color = "red", lwd = 1) + 
+    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "right", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3) + 
+    scale_fill_viridis(option = "H") + 
+    theme_classic() + 
+    guides(fill = "none")
+  ggsave("Spline.Model.pdf", height = 4, width = 4)
+```
+```{r}
+for (i in seq_along(dat.30[[1]])) {
+  dat.30[[1]][[i]]$Weight <- dat.30[[2]][i,"Weight"]
+  dat.30[[1]][[i]]$Lean.Mass <- dat.30[[2]][i,"Lean.mass"]
+  dat.30[[1]][[i]]$Fat.Mass <- dat.30[[2]][i,"Fat.mass"]
+}
 
 for (i in seq_along(dat.25[[1]])) {
   dat.25[[1]][[i]]$Weight <- dat.25[[2]][i,"Weight"]
@@ -351,6 +405,9 @@ library(dplyr)
 plot.interval.EE <- function(cage.data,
                              sample.subset = NULL, 
                              by.proportion = FALSE) {
+    model.spline <- readRDS( "./models/model.spline.rds")
+    model.gam <- readRDS("./models/model.gam.rds")
+    model.glm <- readRDS("./models/model.glm.rds")
     if(!is.null(sample.subset)) {
         cage.data <- subset.data(cage.data, sample.subset)
     }
@@ -470,91 +527,7 @@ plot.interval.EE(dat.5,
 ggsave("dat.5.prop.pdf", height = 3, width = 5)
 ```
 
-```{r}
-indep.vairables <- data.cage[,c("Feed", "Drink", "Heat", "RER", "Ztot")]
-indep.vairables <- indep.vairables %>%
-   mutate("Ambulation" = sqrt(data.cage$Xamb^2 + data.cage$Yamb^2)) %>%
-  mutate("Temp.Delta" = 30-data.cage$Cage_temp)
-indep.vairables <- na.omit(indep.vairables)
-#indep.vairables[,5] <- -indep.vairables[,5]
 
-indep.vairables[,c(5,6)] <- sqrt(indep.vairables[,c(5,6)])
-
-outliers <- NULL
-for(i in c(1,2,3,5)) {
-  x <- rosnerTest(as.matrix(indep.vairables[,]), k = 5)$all.stats
-  x <- x[x$Value >= 1,]
-  x <- x[x$Outlier == TRUE,]
-  x <- x$Obs.Num
-  outliers <- c(outliers, x)
-}
-outliers <- unique(outliers)
-
-indep.vairables <- indep.vairables[-outliers,]
-
-
-indep.vairables <- indep.vairables[indep.vairables$Heat > 5,]
-indep.vairables <- indep.vairables[indep.vairables$Temp.Delta >= -1.5,]
-indep.vairables <- indep.vairables[indep.vairables$Temp.Delta <= 1.5,]
-
-set.seed(1234)
-tr.data <- sample(nrow(indep.vairables), nrow(indep.vairables)*0.7)
-train.set <- indep.vairables[tr.data,]
-test.set <- indep.vairables[-tr.data,]
-
-train.control <- trainControl(method="repeatedcv", number=10, repeats=20)
-  
-  model <- train(Heat ~ Feed + Drink + Ambulation + RER + Ztot + Temp.Delta,
-                 method = "gam",
-                 data = train.set, 
-                 trControl = train.control)
-
-  
-  heat.predict <- predict(model.gam, test.set)
-  
-  df <- cbind.data.frame(test.set, heat.predict)
-  formula <- y ~ x
-  ggplot(df, aes(x=Heat, y = heat.predict)) + 
-    geom_point(stroke = 0.1) + 
-    geom_smooth(method='lm', formula= y~x, color = "red", lwd = 1) + 
-    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-               label.x.npc = "right", label.y.npc = 0.15,
-               formula = formula, parse = TRUE, size = 3) + 
-    scale_fill_viridis(option = "H") + 
-    theme_classic() + 
-    guides(fill = "none")
-  ggsave("GAM.Model.pdf", height = 4, width = 4)
-  
-  
-  heat.predict <- predict(model.glm, test.set)
-  df <- cbind.data.frame(test.set, heat.predict)
-  formula <- y ~ x
-  ggplot(df, aes(x=Heat, y = heat.predict)) + 
-    geom_point(stroke = 0.1) + 
-    geom_smooth(method='lm', formula= y~x, color = "red", lwd = 1) + 
-    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-               label.x.npc = "right", label.y.npc = 0.15,
-               formula = formula, parse = TRUE, size = 3) + 
-    scale_fill_viridis(option = "H") + 
-    theme_classic() + 
-    guides(fill = "none")
-  ggsave("GLM.Model.pdf", height = 4, width = 4)
-  
-    heat.predict <- predict(model.spline, test.set)
-    heat.predict[heat.predict < 0] <- NA
-  df <- cbind.data.frame(test.set, heat.predict)
-  formula <- y ~ x
-  ggplot(df, aes(x=Heat, y = heat.predict)) + 
-    geom_point(stroke = 0.1) + 
-    geom_smooth(method='lm', formula= y~x, color = "red", lwd = 1) + 
-    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-               label.x.npc = "right", label.y.npc = 0.15,
-               formula = formula, parse = TRUE, size = 3) + 
-    scale_fill_viridis(option = "H") + 
-    theme_classic() + 
-    guides(fill = "none")
-  ggsave("Spline.Model.pdf", height = 4, width = 4)
-```
 
 
 ```{r}
