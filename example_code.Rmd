@@ -386,8 +386,8 @@ plot.interval.EE <- function(cage.data,
     
     indep.vairables$heat.mean <- rowMeans(as.matrix(indep.vairables[,9:11]))
     indep.vairables$SF <- indep.vairables$heat.mean/indep.vairables$Heat
-    indep.vairables$Ambulatory.EE <- (indep.vairables$Ambulation*0.3344)/indep.vairables$SF
-    indep.vairables$ThermicEffect.EE <- (indep.vairables$Feed*4.346)/indep.vairables$SF
+    indep.vairables$Ambulatory.EE <- (indep.vairables$Ambulation*0.3344)#/indep.vairables$SF
+    indep.vairables$ThermicEffect.EE <- (indep.vairables$Feed*4.346)#/indep.vairables$SF
     
     indep.vairables$Adaptive.EE <- indep.vairables$Heat - indep.vairables$heat.mean
     indep.vairables$Adaptive.EE[indep.vairables$Adaptive.EE < 0] <- 0
