@@ -162,7 +162,7 @@ library(glmnet)
 formula <- y ~ x
 
 #full.data <- merge.data(list(dat.fed,dat.fast,dat.30,dat.25,dat.25,dat.20,dat.15,dat.10,dat.5))
-full.data <- merge.data(list(dat.fed,dat.fast,dat.30))
+
 for(i in seq_along(full.data[[1]])) {
   full.data[[1]][[i]]$RH_ref <- as.character(full.data[[1]][[i]]$RH_ref)
   full.data[[1]][[i]]$RH_cage <- as.character(full.data[[1]][[i]]$RH_cage)
@@ -192,58 +192,11 @@ set.seed(1234)
 tr.data <- sample(nrow(indep.vairables), nrow(indep.vairables)*0.7)
 train.set <- indep.vairables[tr.data,]
 test.set <- indep.vairables[-tr.data,]
-
-model.list <- list()
-model.method <- c("glm", "bam", "gam", "glmnet","rlm")
-for (i in seq_along(model.method)) {
-    train_control <- trainControl(method="repeatedcv", number=10, repeats=20)
-  
-  model <- train(Heat ~ Feed + Drink + Ambulation + Temp.Delta,
-                 method = model.method[i],
-                 data = train.set, 
-                 trControl = train_control)
-  
-  heat.predict <- predict(model, test.set)
-  model.list[[i]] <- model
-  
-  df <- cbind.data.frame(test.set, heat.predict)
-  
-  ggplot(df, aes(x=Heat, y = heat.predict)) + 
-    geom_point(aes(fill = Temp.Delta), shape = 21, stroke = 0.1) + 
-    geom_smooth(method='lm', formula= y~x, color = "black", se = TRUE) + 
-    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-               label.x.npc = "right", label.y.npc = 0.15,
-               formula = formula, parse = TRUE, size = 3) + 
-    scale_fill_viridis(option = "H") + 
-    theme_classic() + 
-    guides(fill = "none")
-  ggsave(paste0("model.", model.method[i], ".pdf"), height = 4, width = 4)
-  rm(model)
-}
-saveRDS(model.list, "trained.models.rds")
 ```
 
 
-
 ```{r}
-model.list <- readRDS("trained.models.rds")
-gam.model <- model.list[[3]]
-bam.model <- model.list[[2]]
-glm.model <- model.list[[1]]
-rlm.model <- model.list[[5]]
-glmnet <- model.list[[4]]
-
-predict(glm.model, test.set[1,])
-test.set$Heat[1]
-
-test.set[1,]$Feed* 5.62 + test.set[1,]$Drink*0.4986 + test.set[1,]$Ambulation* 0.3769 + test.set[1,]$Temp.Delta*7.5 + 49.9
-```
-
-
-
-```{r}
-#indep.vairables <- data.cage[,c("Feed", "Drink", "Heat", "Weight", "Lean.Mass")]
-indep.vairables <- data.cage[,-38]
+indep.vairables <- data.cage[,c("Feed", "Drink", "Heat", "Weight", "Lean.Mass")]
 indep.vairables <- indep.vairables %>%
    mutate("Ambulation" = sqrt(data.cage$Xamb^2 + data.cage$Yamb^2)) %>%
   mutate("Temp.Delta" = 30-data.cage$Cage_temp)
@@ -273,10 +226,11 @@ tr.data <- sample(nrow(indep.vairables), nrow(indep.vairables)*0.7)
 train.set <- indep.vairables[tr.data,]
 test.set <- indep.vairables[-tr.data,]
 
+
 train.control <- trainControl(method="repeatedcv", number=10, repeats=20)
   
-  model <- train(Heat ~ Feed + Ambulation + Fat.Mass + Lean.Mass + Weight,
-                 method = "glm",
+  model <- train(Heat ~ Feed + Ambulation + Weight,
+                 method = "gam",
                  data = train.set, 
                  trControl = train.control)
   
@@ -306,6 +260,214 @@ corrplot(corr, type = "upper", order = "hclust",
          tl.col = "black", tl.srt = 45, 
          col = rev(COL2('RdBu', 200)))
 dev.off()
+```
+
+
+```{r}
+full.data <- merge.data(list(dat.fed,dat.fast,dat.30))
+indep.vairables <- data.cage[,c("Feed", "Drink", "Heat", "Weight", "Lean.Mass")]
+indep.vairables <- indep.vairables %>%
+   mutate("Ambulation" = sqrt(data.cage$Xamb^2 + data.cage$Yamb^2)) %>%
+  mutate("Temp.Delta" = 30-data.cage$Cage_temp)
+indep.vairables <- na.omit(indep.vairables)
+#indep.vairables[,5] <- -indep.vairables[,5]
+
+outliers <- NULL
+for(i in c(1,2,3,5,6,7)) {
+  x <- rosnerTest(as.matrix(indep.vairables[,]), k = 5)$all.stats
+  x <- x[x$Value >= 1,]
+  x <- x[x$Outlier == TRUE,]
+  x <- x$Obs.Num
+  outliers <- c(outliers, x)
+}
+outliers <- unique(outliers)
+
+indep.vairables <- indep.vairables[-outliers,]
+
+indep.vairables[,"Ambulation"] <- sqrt(indep.vairables[,"Ambulation"])
+indep.vairables <- indep.vairables[indep.vairables$Heat > 5,]
+indep.vairables <- indep.vairables[indep.vairables$Temp.Delta >= -1.5,]
+indep.vairables <- indep.vairables[indep.vairables$Temp.Delta <= 1.5,]
+
+set.seed(1234)
+tr.data <- sample(nrow(indep.vairables), nrow(indep.vairables)*0.7)
+train.set <- indep.vairables[tr.data,]
+test.set <- indep.vairables[-tr.data,]
+
+model.spline <- npreg::sm(Heat ~  Ambulation + Feed +  Weight, data =  train.set, method = "ML")
+
+train.control <- trainControl(method="repeatedcv", number=10, repeats=20)
+model.gam <- train(Heat ~ Ambulation + Feed + Weight,
+                 method = "gam",
+                 data = train.set, 
+                 trControl = train.control)
+
+model.glm <- train(Heat ~ Ambulation + Feed + Weight,
+                 method = "glm",
+                 data = train.set, 
+                 trControl = train.control)
+
+saveRDS(model.spline, file = "./models/model.spline.rds")
+saveRDS(model.gam, file = "./models/model.gam.rds")
+saveRDS(model.glm, file = "./models/model.glm.rds")
+
+
+
+for (i in seq_along(dat.25[[1]])) {
+  dat.25[[1]][[i]]$Weight <- dat.25[[2]][i,"Weight"]
+  dat.25[[1]][[i]]$Lean.Mass <- dat.25[[2]][i,"Lean.mass"]
+  dat.25[[1]][[i]]$Fat.Mass <- dat.25[[2]][i,"Fat.mass"]
+}
+    
+for (i in seq_along(dat.10[[1]])) {
+  dat.10[[1]][[i]]$Weight <- dat.10[[2]][i,"Weight"]
+  dat.10[[1]][[i]]$Lean.Mass <- dat.10[[2]][i,"Lean.mass"]
+  dat.10[[1]][[i]]$Fat.Mass <- dat.10[[2]][i,"Fat.mass"]
+}
+    
+for (i in seq_along(dat.15[[1]])) {
+  dat.15[[1]][[i]]$Weight <- dat.15[[2]][i,"Weight"]
+  dat.15[[1]][[i]]$Lean.Mass <- dat.15[[2]][i,"Lean.mass"]
+  dat.15[[1]][[i]]$Fat.Mass <- dat.15[[2]][i,"Fat.mass"]
+}
+
+for (i in seq_along(dat.20[[1]])) {
+  dat.20[[1]][[i]]$Weight <- dat.20[[2]][i,"Weight"]
+  dat.20[[1]][[i]]$Lean.Mass <- dat.20[[2]][i,"Lean.mass"]
+  dat.20[[1]][[i]]$Fat.Mass <- dat.20[[2]][i,"Fat.mass"]
+}
+
+for (i in seq_along(dat.5[[1]])) {
+  dat.5[[1]][[i]]$Weight <- dat.5[[2]][i,"Weight"]
+  dat.5[[1]][[i]]$Lean.Mass <- dat.5[[2]][i,"Lean.mass"]
+  dat.5[[1]][[i]]$Fat.Mass <- dat.5[[2]][i,"Fat.mass"]
+}
+    
+cage.data <- dat.30
+
+library(ggplot2)
+library(viridis)
+library(dplyr)
+plot.interval.EE <- function(cage.data,
+                             sample.subset = NULL, 
+                             by.proportion = FALSE) {
+    if(!is.null(sample.subset)) {
+        cage.data <- subset.data(cage.data, sample.subset)
+    }
+    pre.plot.dat <- bind_rows(cage.data[[1]])
+    indep.vairables <- pre.plot.dat[,c("Feed", "Drink", "Heat", "Weight", "Lean.Mass", "Interval_num")]
+    indep.vairables <- indep.vairables %>%
+       mutate("Ambulation" = sqrt(pre.plot.dat$Xamb^2 + pre.plot.dat$Yamb^2)) %>%
+      mutate("Temp.Delta" = 30-pre.plot.dat$Cage_temp)
+    indep.vairables <- na.omit(indep.vairables)
+    
+    outliers <- NULL
+    for(i in c(1,2,3,5,7,8)) {
+      x <- EnvStats::rosnerTest(as.matrix(indep.vairables[,i]), k = 5)$all.stats
+      x <- x[x$Value >= 1,]
+      x <- x[x$Outlier == TRUE,]
+      x <- x$Obs.Num
+      outliers <- c(outliers, x)
+    }
+    outliers <- unique(outliers)
+    indep.vairables <- indep.vairables[-outliers,]
+    
+    indep.vairables[,"Ambulation"] <- sqrt(indep.vairables[,"Ambulation"])
+    indep.vairables <- indep.vairables[indep.vairables$Heat > 5,]
+    
+    heat.gam <- predict(model.gam, indep.vairables)
+    
+    heat.spline<- npreg::predict.sm(model.spline, indep.vairables)
+    heat.spline[heat.spline < 0] <- NA
+    
+    heat.glm <- predict(model.glm, indep.vairables)
+  
+    indep.vairables <- data.frame(indep.vairables, heat.spline, heat.gam, heat.glm)
+    
+    indep.vairables$heat.mean <- rowMeans(as.matrix(indep.vairables[,9:11]))
+    indep.vairables$SF <- indep.vairables$heat.mean/indep.vairables$Heat
+    indep.vairables$Ambulatory.EE <- (indep.vairables$Ambulation*0.3344)/indep.vairables$SF
+    indep.vairables$ThermicEffect.EE <- (indep.vairables$Feed*4.346)/indep.vairables$SF
+    
+    indep.vairables$Adaptive.EE <- indep.vairables$Heat - indep.vairables$heat.mean
+    indep.vairables$Adaptive.EE[indep.vairables$Adaptive.EE < 0] <- 0
+    
+    #indep.vairables$BMR.EE <- indep.vairables$heat.mean/indep.vairables$SF - (indep.vairables$Adaptive.EE + 8.8652 + 0.6976*indep.vairables$Weight)
+    
+    indep.vairables$BMR.EE <- indep.vairables$Heat - (indep.vairables$Adaptive.EE + indep.vairables$Ambulatory.EE + indep.vairables$ThermicEffect.EE)
+    
+    
+
+    indep.vairables <- na.omit(indep.vairables)
+  
+    EE.summary <- indep.vairables %>%
+      group_by(Interval_num) %>%
+      summarise(across(c(3,9:16), mean)) %>%
+      as.data.frame()
+  
+    melted <- reshape2::melt(EE.summary[,c(1,7:10)], id.vars = 1)
+  
+    melted$variable <- factor(melted$variable, levels = c("Adaptive.EE", "Ambulatory.EE", "ThermicEffect.EE", "BMR.EE"))
+    plot <- ggplot(melted, aes(x=as.numeric(Interval_num), y =as.numeric(value), fill = variable )) + 
+      scale_fill_viridis(option = "H", discrete = TRUE, direction = -1) + 
+      theme_classic() + 
+      ylab("Heat") + 
+      xlab("Time Interval")
+    if(by.proportion) {
+      plot <- plot + geom_bar(stat = "identity", position = "fill")
+    } else {
+      plot <- plot + geom_bar(stat = "identity")
+    }
+    return(plot)
+}
+
+plot.interval.EE(dat.30, 
+                 by.proportion = FALSE) + 
+  ylim(0,40)
+ggsave("dat.30.pdf", height = 3, width = 5)
+plot.interval.EE(dat.30, 
+                 by.proportion = TRUE)
+ggsave("dat.30.prop.pdf", height = 3, width = 5)
+
+plot.interval.EE(dat.25, 
+                 by.proportion = FALSE)+ 
+  ylim(0,40)
+ggsave("dat.25.pdf", height = 3, width = 5)
+plot.interval.EE(dat.25, 
+                 by.proportion = TRUE)
+ggsave("dat.25.prop.pdf", height = 3, width = 5)
+
+plot.interval.EE(dat.20, 
+                 by.proportion = FALSE)+ 
+  ylim(0,40)
+ggsave("dat.20.pdf", height = 3, width = 5)
+plot.interval.EE(dat.20, 
+                 by.proportion = TRUE)
+ggsave("dat.20.prop.pdf", height = 3, width =5)
+
+plot.interval.EE(dat.15, 
+                 by.proportion = FALSE)+ 
+  ylim(0,40)
+ggsave("dat.15.pdf", height = 3, width = 5)
+plot.interval.EE(dat.15, 
+                 by.proportion = TRUE)
+ggsave("dat.15.prop.pdf", height = 3, width = 5)
+
+plot.interval.EE(dat.10, 
+                 by.proportion = FALSE)+ 
+  ylim(0,40)
+ggsave("dat.10.pdf", height = 3, width = 5)
+plot.interval.EE(dat.10, 
+                 by.proportion = TRUE)
+ggsave("dat.10.prop.pdf", height = 3, width = 5)
+
+plot.interval.EE(dat.5, 
+                 by.proportion = FALSE)+ 
+  ylim(0,40)
+ggsave("dat.5.pdf", height = 3, width = 5)
+plot.interval.EE(dat.5, 
+                 by.proportion = TRUE)
+ggsave("dat.5.prop.pdf", height = 3, width = 5)
 ```
 
 ```{r}
@@ -348,19 +510,50 @@ train.control <- trainControl(method="repeatedcv", number=10, repeats=20)
                  trControl = train.control)
 
   
-  heat.predict <- predict(model, test.set)
+  heat.predict <- predict(model.gam, test.set)
   
   df <- cbind.data.frame(test.set, heat.predict)
   formula <- y ~ x
   ggplot(df, aes(x=Heat, y = heat.predict)) + 
-    geom_point(aes(fill = Temp.Delta^2), shape = 21, stroke = 0.1) + 
-    geom_smooth(method='lm', formula= y~x, color = "black") + 
+    geom_point(stroke = 0.1) + 
+    geom_smooth(method='lm', formula= y~x, color = "red", lwd = 1) + 
     stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
                label.x.npc = "right", label.y.npc = 0.15,
                formula = formula, parse = TRUE, size = 3) + 
     scale_fill_viridis(option = "H") + 
     theme_classic() + 
     guides(fill = "none")
+  ggsave("GAM.Model.pdf", height = 4, width = 4)
+  
+  
+  heat.predict <- predict(model.glm, test.set)
+  df <- cbind.data.frame(test.set, heat.predict)
+  formula <- y ~ x
+  ggplot(df, aes(x=Heat, y = heat.predict)) + 
+    geom_point(stroke = 0.1) + 
+    geom_smooth(method='lm', formula= y~x, color = "red", lwd = 1) + 
+    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "right", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3) + 
+    scale_fill_viridis(option = "H") + 
+    theme_classic() + 
+    guides(fill = "none")
+  ggsave("GLM.Model.pdf", height = 4, width = 4)
+  
+    heat.predict <- predict(model.spline, test.set)
+    heat.predict[heat.predict < 0] <- NA
+  df <- cbind.data.frame(test.set, heat.predict)
+  formula <- y ~ x
+  ggplot(df, aes(x=Heat, y = heat.predict)) + 
+    geom_point(stroke = 0.1) + 
+    geom_smooth(method='lm', formula= y~x, color = "red", lwd = 1) + 
+    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "right", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3) + 
+    scale_fill_viridis(option = "H") + 
+    theme_classic() + 
+    guides(fill = "none")
+  ggsave("Spline.Model.pdf", height = 4, width = 4)
 ```
 
 
@@ -463,7 +656,15 @@ formula= y~x
  ggsave("Flox.mice_v2.pdf", height = 3, width = 3)
 ```
 
+ca
 ```{r}
+
+
+
+
+
+cage.data <- dat.25$cage_data
+
 estimate.EE.grouped <- function(cage.data, 
                         group.by = "Interval_num", 
                         split.by = NULL,
@@ -488,7 +689,7 @@ estimate.EE.grouped <- function(cage.data,
       }
     }
   }
-  indep.vairables <- pre.plot.dat[,c("Feed", "Drink", "Heat")]
+  indep.vairables <- pre.plot.dat[,c("Feed", "Drink", "Heat", "Weight")]
   indep.vairables <- indep.vairables %>%
      mutate("Ambulation" = sqrt(pre.plot.dat$Xamb^2 + pre.plot.dat$Yamb^2)) %>%
     mutate("Temp.Delta" = pre.plot.dat$Cage_temp-30)
@@ -514,8 +715,25 @@ estimate.EE.grouped <- function(cage.data,
       indep.vairables <- indep.vairables[-outliers,]
     }
   }
+  indep.vairables <- indep.vairables[indep.vairables$Heat > 5,]
   indep.vairables[,"Ambulation"] <- sqrt(indep.vairables[,"Ambulation"])
   
+  heat.predict <- predict(model, indep.vairables)
+  
+  df <- cbind.data.frame(indep.vairables, heat.predict)
+  formula <- y ~ x
+  ggplot(df, aes(x=Heat, y = heat.predict)) + 
+    geom_point(aes(fill = Temp.Delta^2), shape = 21, stroke = 0.1) + 
+    geom_smooth(method='lm', formula= y~x, color = "black") + 
+    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "right", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3) + 
+    scale_fill_viridis(option = "H") + 
+    theme_classic() + 
+    guides(fill = "none")
+  
+  
+  df$Adaptive.EE <- df$Heat - df$heat.predict
   EE.estimates <- bin.energy(indep.vairables, group.by, split.by)
   EE.estimates$group.by <- as.factor(EE.estimates$group.by)
   EE.estimates[,1:7] <- sapply(EE.estimates[,1:7], as.numeric)
