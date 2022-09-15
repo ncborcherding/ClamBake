@@ -411,11 +411,10 @@ plot.interval.EE <- function(cage.data,
     if(!is.null(sample.subset)) {
         cage.data <- subset.data(cage.data, sample.subset)
     }
-    pre.plot.dat <- bind_rows(cage.data[[1]])
-    indep.vairables <- pre.plot.dat[,c("Feed", "Drink", "Heat", "Weight", "Lean.Mass", "Interval_num")]
+    pre.plot.dat <- dplyr::bind_rows(cage.data[[1]])
+    indep.vairables <- pre.plot.dat[,c("Feed", "Drink", "Heat", "Weight", "Interval_num")]
     indep.vairables <- indep.vairables %>%
-       mutate("Ambulation" = sqrt(pre.plot.dat$Xamb^2 + pre.plot.dat$Yamb^2)) %>%
-      mutate("Temp.Delta" = 30-pre.plot.dat$Cage_temp)
+       mutate("Ambulation" = sqrt(pre.plot.dat$Xamb^2 + pre.plot.dat$Yamb^2)) 
     indep.vairables <- na.omit(indep.vairables)
     
     outliers <- NULL
@@ -541,8 +540,8 @@ meta <- read.csv(meta.file)
 dat.flox<- load.data(file.dir = dir.to.use,
                  meta.file = meta.file, 
                  equilibrate.interval = 8,
-                 contrast = NULL,
-                      baseline = NULL)
+                 contrast = "Condition",
+                      baseline = "Pre")
 
 
 
@@ -554,15 +553,38 @@ meta <- read.csv(meta.file)
 dat.cre <- load.data(file.dir = dir.to.use,
                  meta.file = meta.file, 
                  equilibrate.interval = 8,
-                 contrast = NULL,
-                      baseline = NULL)
+                contrast = "Condition",
+                      baseline = "Pre")
 
-estimate.EE(dat.cre) + 
+for (i in seq_along(dat.flox[[1]])) {
+  dat.flox[[1]][[i]]$Weight <- dat.flox[[2]][i,"Weight"]
+  dat.flox[[1]][[i]]$Lean.Mass <- dat.flox[[2]][i,"Lean.mass"]
+  dat.flox[[1]][[i]]$Fat.Mass <- dat.flox[[2]][i,"Fat.mass"]
+  dat.flox[[1]][[i]] <- dat.flox[[1]][[i]][,-c(31,32)]
+}
+
+for (i in seq_along(dat.cre[[1]])) {
+  dat.cre[[1]][[i]]$Weight <- dat.cre[[2]][i,"Weight"]
+  dat.cre[[1]][[i]]$Lean.Mass <- dat.cre[[2]][i,"Lean.mass"]
+  dat.cre[[1]][[i]]$Fat.Mass <- dat.cre[[2]][i,"Fat.mass"]
+  dat.cre[[1]][[i]] <- dat.cre[[1]][[i]][,-c(31,32)]
+}
+
+plot.interval.EE(dat.cre, 
+                 by.proportion = FALSE) + 
   ylim(0,40)
-ggsave("grouped.Cre.pdf", height = 3, width = 4)
-estimate.EE(dat.flox)  + 
+ggsave("dat.cre.pdf", height = 3, width = 5)
+plot.interval.EE(dat.cre, 
+                 by.proportion = TRUE)
+ggsave("dat.cre.prop.pdf", height = 3, width = 5)
+
+plot.interval.EE(dat.flox, 
+                 by.proportion = FALSE)+ 
   ylim(0,40)
-ggsave("grouped.Flox.pdf", height = 3, width = 4)
+ggsave("dat.flox.pdf", height = 3, width = 5)
+plot.interval.EE(dat.flox, 
+                 by.proportion = TRUE)
+ggsave("dat.flox.prop.pdf", height = 3, width = 5)
 ```
 
 
