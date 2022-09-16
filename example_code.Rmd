@@ -418,7 +418,7 @@ plot.interval.EE <- function(cage.data,
     indep.vairables <- na.omit(indep.vairables)
     
     outliers <- NULL
-    for(i in c(1,2,3,5,7,8)) {
+    for(i in c(1,2,3,6)) {
       x <- EnvStats::rosnerTest(as.matrix(indep.vairables[,i]), k = 5)$all.stats
       x <- x[x$Value >= 1,]
       x <- x[x$Outlier == TRUE,]
@@ -440,7 +440,7 @@ plot.interval.EE <- function(cage.data,
   
     indep.vairables <- data.frame(indep.vairables, heat.spline, heat.gam, heat.glm)
     
-    indep.vairables$heat.mean <- rowMeans(as.matrix(indep.vairables[,9:11]))
+    indep.vairables$heat.mean <- rowMeans(as.matrix(indep.vairables[,c("heat.spline", "heat.gam", "heat.glm")]))
     indep.vairables$SF <- indep.vairables$heat.mean/indep.vairables$Heat
     indep.vairables$Ambulatory.EE <- (indep.vairables$Ambulation*0.3344)#/indep.vairables$SF
     indep.vairables$ThermicEffect.EE <- (indep.vairables$Feed*4.346)#/indep.vairables$SF
@@ -458,7 +458,7 @@ plot.interval.EE <- function(cage.data,
   
     EE.summary <- indep.vairables %>%
       group_by(Interval_num) %>%
-      summarise(across(c(3,9:16), mean)) %>%
+      summarise(across(c(3,7:14), mean)) %>%
       as.data.frame()
   
     melted <- reshape2::melt(EE.summary[,c(1,7:10)], id.vars = 1)
