@@ -543,6 +543,8 @@ dat.flox<- load.data(file.dir = dir.to.use,
                  contrast = "Condition",
                       baseline = "Pre")
 
+dat.flox[[2]]$Weight <- as.numeric(dat.flox[[2]][1,4:11])
+
 
 
 
@@ -556,17 +558,15 @@ dat.cre <- load.data(file.dir = dir.to.use,
                 contrast = "Condition",
                       baseline = "Pre")
 
+dat.cre[[2]]$Weight <- as.numeric(dat.cre[[2]][1,4:9])
+
 for (i in seq_along(dat.flox[[1]])) {
   dat.flox[[1]][[i]]$Weight <- dat.flox[[2]][i,"Weight"]
-  dat.flox[[1]][[i]]$Lean.Mass <- dat.flox[[2]][i,"Lean.mass"]
-  dat.flox[[1]][[i]]$Fat.Mass <- dat.flox[[2]][i,"Fat.mass"]
   dat.flox[[1]][[i]] <- dat.flox[[1]][[i]][,-c(31,32)]
 }
 
 for (i in seq_along(dat.cre[[1]])) {
   dat.cre[[1]][[i]]$Weight <- dat.cre[[2]][i,"Weight"]
-  dat.cre[[1]][[i]]$Lean.Mass <- dat.cre[[2]][i,"Lean.mass"]
-  dat.cre[[1]][[i]]$Fat.Mass <- dat.cre[[2]][i,"Fat.mass"]
   dat.cre[[1]][[i]] <- dat.cre[[1]][[i]][,-c(31,32)]
 }
 
