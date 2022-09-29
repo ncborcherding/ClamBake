@@ -573,42 +573,44 @@ for (i in seq_along(dat.cre[[1]])) {
 plot.interval.EE(dat.cre, 
                  by.proportion = FALSE) + 
   ylim(0,40)
-ggsave("dat.cre.pdf", height = 3, width = 5)
+#ggsave("dat.cre.pdf", height = 3, width = 5)
 plot.interval.EE(dat.cre, 
                  by.proportion = TRUE)
-ggsave("dat.cre.prop.pdf", height = 3, width = 5)
+#ggsave("dat.cre.prop.pdf", height = 3, width = 5)
 
 plot.interval.EE(dat.flox, 
                  by.proportion = FALSE)+ 
   ylim(0,40)
-ggsave("dat.flox.pdf", height = 3, width = 5)
+#ggsave("dat.flox.pdf", height = 3, width = 5)
 plot.interval.EE(dat.flox, 
                  by.proportion = TRUE)
-ggsave("dat.flox.prop.pdf", height = 3, width = 5)
+#ggsave("dat.flox.prop.pdf", height = 3, width = 5)
 ```
 
 ```{r}
 cre.data <- bind_rows(dat.cre[[1]])
 cre.data <- cre.data %>%
-       mutate("Ambulation" = Xamb + Yamb) 
+       mutate("Ambulation" = sqrt(Xamb^2 + Yamb^2)) 
 
 flox.data <- bind_rows(dat.flox[[1]])
 flox.data<- flox.data %>%
-       mutate("Ambulation" = Xamb + Yamb) 
+       mutate("Ambulation" = sqrt(Xamb^2 + Yamb^2) )
 
 
-fd <- data.frame("Ambulation" = flox.data$Ambulation, "Interval" = flox.data$Interval_num)
-fd[,3] <- "Flox"
-colnames(fd)[3] <- "Condition"
+fd <- data.frame("Ambulation" = flox.data$Ambulation, "Interval" = flox.data$Interval_num, "Cage" = flox.data$Cage)
+fd[,4] <- "Flox"
+colnames(fd)[4] <- "Condition"
 
-cd <- data.frame("Ambulation" = cre.data$Ambulation, "Interval" = cre.data$Interval_num)
-cd[,3] <- "Cre"
-colnames(cd)[3] <- "Condition"
+cd <- data.frame("Ambulation" = cre.data$Ambulation, "Interval" = cre.data$Interval_num,
+                 "Cage" = cre.data$Cage)
+cd[,4] <- "Cre"
+colnames(cd)[4] <- "Condition"
 
 df.plot <- rbind(fd,cd)
 
 ggplot(df.plot, aes(x=as.numeric(Interval), y = Ambulation)) + 
-  geom_point(aes(color = Condition))
+  geom_point(aes(color = Condition), pt.size = 0.5) + 
+  facet_wrap(~Cage)
 ```
 
 
