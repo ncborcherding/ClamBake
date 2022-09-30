@@ -15,8 +15,9 @@ pull.dat <- function(header.list, original.dat) {
   return(out.data)
 }
 
-subset.data <- function(orginal.dat, samples) {
+subset.data <- function(original.dat, samples) {
   original.dat[[1]] <- original.dat[[1]][-which(names(original.dat[[1]]) %!in% samples)]
   original.dat[[2]] <- original.dat[[2]][original.dat[[2]]$filename %in% samples,]
-  
+  return(original.dat)
 }
+

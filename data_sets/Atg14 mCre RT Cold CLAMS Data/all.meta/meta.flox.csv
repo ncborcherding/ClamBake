@@ -1,0 +1,17 @@
+CLAMS,Condition,Genotype,Weight,filename
+1,Pre,Flox,26.7,2020-08-24 NPM025 Atg14 Acute Cold.0101 Atg14 Flox Flox.csv
+2,Pre,Flox,26.2,2020-08-24 NPM025 Atg14 Acute Cold.0102 Atg14 Flox Flox.csv
+4,Pre,Flox,24.8,2020-08-24 NPM025 Atg14 Acute Cold.0104 Atg14 Flox Flox.csv
+6,Pre,Flox,32,2020-08-24 NPM025 Atg14 Acute Cold.0106 Atg14 Flox Flox.csv
+7,Pre,Flox,29.6,2020-08-24 NPM025 Atg14 Acute Cold.0107 Atg14 Flox Flox.csv
+9,Pre,Flox,31.6,2020-08-24 NPM025 Atg14 Acute Cold.0109 Atg14 Flox Flox.csv
+10,Pre,Flox,29,2020-08-24 NPM025 Atg14 Acute Cold.0110 Atg14 Flox Flox.csv
+14,Pre,Flox,27.8,2020-08-24 NPM025 Atg14 Acute Cold.0114 Atg14 Flox Flox.csv
+1,Post,Flox,26.7,2020-08-24 NPM025 Atg14 Acute Cold.0101 Atg14 Flox Flox.csv
+2,Post,Flox,26.2,2020-08-24 NPM025 Atg14 Acute Cold.0102 Atg14 Flox Flox.csv
+4,Post,Flox,24.4,2020-08-24 NPM025 Atg14 Acute Cold.0104 Atg14 Flox Flox.csv
+6,Post,Flox,30.7,2020-08-24 NPM025 Atg14 Acute Cold.0106 Atg14 Flox Flox.csv
+7,Post,Flox,29.2,2020-08-24 NPM025 Atg14 Acute Cold.0107 Atg14 Flox Flox.csv
+9,Post,Flox,28.7,2020-08-24 NPM025 Atg14 Acute Cold.0109 Atg14 Flox Flox.csv
+10,Post,Flox,28.9,2020-08-24 NPM025 Atg14 Acute Cold.0110 Atg14 Flox Flox.csv
+14,Post,Flox,27.1,2020-08-24 NPM025 Atg14 Acute Cold.0114 Atg14 Flox Flox.csv
