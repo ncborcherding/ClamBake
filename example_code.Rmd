@@ -7,87 +7,10 @@ output: html_document
 source("~/Documents/GitHub/ClamBake/R/load.data.R")
 source("~/Documents/GitHub/ClamBake/R/merge.data.R")
 source("~/Documents/GitHub/ClamBake/R/utils.R")
-
-
-dir.to.use <- "./data_sets/2022-03-14 B6 Fed Fasting 30C Metabolic Data/cage_data/2022-03-14 D1 Feed"
-meta.file <- "./data_sets/2022-03-14 B6 Fed Fasting 30C Metabolic Data/feed.meta.csv"
-
-meta <- read.csv(meta.file)
-dat.fed <- load.data(file.dir = dir.to.use,
-                 meta.file = meta.file, 
-                 equilibrate.interval = 8,
-                 contrast = "Condition",
-                      baseline = "Pre")
-
-dir.to.use <- "./data_sets/2022-03-14 B6 Fed Fasting 30C Metabolic Data/cage_data/2022-03-15 D2 Fasting"
-meta.file <- "./data_sets/2022-03-14 B6 Fed Fasting 30C Metabolic Data/fast.meta.csv"
-
-dat.fast <- load.data(file.dir = dir.to.use,
-                 meta.file = meta.file, 
-                 contrast = "Condition",
-                      baseline = "Pre")
-
-
-  
-
-
+source("~/Documents/GitHub/ClamBake/R/plot.interval.EE.R")
 ```
 
-##################################
-#Estimating Adaptive Thermogenesis
-##################################
 
-```{r}
-dir.to.use <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/cage_data/2022-03-22 30C"
-meta.file <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/30.meta.csv"
-
-dat.30 <- load.data(file.dir = dir.to.use,
-                 meta.file = meta.file, 
-                 contrast = "Condition",
-                      baseline = "Pre")
-
-dir.to.use <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/cage_data/2022-03-23 25C"
-meta.file <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/25.meta.csv"
-
-dat.25 <- load.data(file.dir = dir.to.use,
-                 meta.file = meta.file, 
-                 contrast = "Condition",
-                      baseline = "Pre")
-
-dir.to.use <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/cage_data/2022-03-24 20C"
-meta.file <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/20.meta.csv"
-
-dat.20 <- load.data(file.dir = dir.to.use,
-                 meta.file = meta.file, 
-                 contrast = "Condition",
-                      baseline = "Pre")
-
-dir.to.use <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/cage_data/2022-03-25 15C"
-meta.file <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/15.meta.csv"
-
-dat.15 <- load.data(file.dir = dir.to.use,
-                 meta.file = meta.file, 
-                 contrast = "Condition",
-                      baseline = "Pre")
-
-dir.to.use <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/cage_data/2022-03-26 10C"
-meta.file <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/10.meta.csv"
-
-dat.10 <- load.data(file.dir = dir.to.use,
-                 meta.file = meta.file, 
-                 contrast = "Condition",
-                      baseline = "Pre")
-
-dir.to.use <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/cage_data/2022-03-27 5C"
-meta.file <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/5.meta.csv"
-
-dat.5 <- load.data(file.dir = dir.to.use,
-                 meta.file = meta.file, 
-                 contrast = "Condition",
-                      baseline = "Pre")
-
-AThermo.data <- merge.data(list(dat.30,dat.25,dat.25,dat.20,dat.15,dat.10,dat.5))
-```
 
 
 #Isothermal estimation
@@ -151,121 +74,27 @@ dat.course[[2]] <- dat.course[[2]][,colnames(dat.fast[[2]])]
 library(EnvStats)
 library(caret)
 library(kernlab)
+library(mboost)
+library(earth)
+library(brnn)
+library(RSNNS)
 library(mgcv)
-library(LiblineaR)
-library(deepboost)
+library(arm)
+#library(import)
 library(ggpmisc)
 library(dplyr)
 library(ggplot2)
 library(viridis)
-library(glmnet)
 formula <- y ~ x
 
-#full.data <- merge.data(list(dat.fed,dat.fast,dat.30,dat.25,dat.25,dat.20,dat.15,dat.10,dat.5))
-
-for(i in seq_along(full.data[[1]])) {
-  full.data[[1]][[i]]$RH_ref <- as.character(full.data[[1]][[i]]$RH_ref)
-  full.data[[1]][[i]]$RH_cage <- as.character(full.data[[1]][[i]]$RH_cage)
-  full.data[[1]][[i]]$Cage_temp <- as.numeric(full.data[[1]][[i]]$Cage_temp)
-}
-data.cage <- bind_rows(full.data[[1]])
-
-indep.vairables <- data.cage[,c("Feed", "Drink", "Heat", "Weight", "Lean.Mass")]
-indep.vairables <- indep.vairables %>%
-   mutate("Ambulation" = sqrt(data.cage$Xamb^2 + data.cage$Yamb^2)) %>%
-  mutate("Temp.Delta" = data.cage$Cage_temp)
-
-
-outliers <- NULL
-for(i in c(1,2,3,5)) {
-  x <- rosnerTest(as.matrix(indep.vairables[,]), k = 5)$all.stats
-  x <- x[x$Value >= 1,]
-  x <- x[x$Outlier == TRUE,]
-  x <- x$Obs.Num
-  outliers <- c(outliers, x)
-}
-outliers <- unique(outliers)
-
-indep.vairables <- indep.vairables[-outliers,]
-
-set.seed(1234)
-tr.data <- sample(nrow(indep.vairables), nrow(indep.vairables)*0.7)
-train.set <- indep.vairables[tr.data,]
-test.set <- indep.vairables[-tr.data,]
-```
-
-
-```{r}
-indep.vairables <- data.cage[,c("Feed", "Drink", "Heat", "Weight", "Lean.Mass")]
-indep.vairables <- indep.vairables %>%
-   mutate("Ambulation" = sqrt(data.cage$Xamb^2 + data.cage$Yamb^2)) %>%
-  mutate("Temp.Delta" = 30-data.cage$Cage_temp)
-indep.vairables <- na.omit(indep.vairables)
-#indep.vairables[,5] <- -indep.vairables[,5]
-
-outliers <- NULL
-for(i in c(1,2,3,5,6,7)) {
-  x <- rosnerTest(as.matrix(indep.vairables[,]), k = 5)$all.stats
-  x <- x[x$Value >= 1,]
-  x <- x[x$Outlier == TRUE,]
-  x <- x$Obs.Num
-  outliers <- c(outliers, x)
-}
-outliers <- unique(outliers)
-
-indep.vairables <- indep.vairables[-outliers,]
-
-indep.vairables[,"Ambulation"] <- sqrt(indep.vairables[,"Ambulation"])
-#indep.vairables[,c(4,5)] <- sqrt(indep.vairables[,c(4,5)])
-indep.vairables <- indep.vairables[indep.vairables$Heat > 5,]
-indep.vairables <- indep.vairables[indep.vairables$Temp.Delta >= -1.5,]
-indep.vairables <- indep.vairables[indep.vairables$Temp.Delta <= 1.5,]
-
-set.seed(1234)
-tr.data <- sample(nrow(indep.vairables), nrow(indep.vairables)*0.7)
-train.set <- indep.vairables[tr.data,]
-test.set <- indep.vairables[-tr.data,]
-
-
-train.control <- trainControl(method="repeatedcv", number=10, repeats=20)
-  
-  model <- train(Heat ~ Feed + Ambulation + Weight,
-                 method = "gam",
-                 data = train.set, 
-                 trControl = train.control)
-  
-  heat.predict <- predict(model, test.set)
-  
-  df <- cbind.data.frame(test.set, heat.predict)
-  formula <- y ~ x
-  ggplot(df, aes(x=Heat, y = heat.predict)) + 
-    geom_point(stroke = 0.1) + 
-    geom_smooth(method='lm', formula= y~x, color = "black") + 
-    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-               label.x.npc = "right", label.y.npc = 0.15,
-               formula = formula, parse = TRUE, size = 3) + 
-    scale_fill_viridis(option = "H") + 
-    theme_classic() + 
-    guides(fill = "none")
-  ggsave("glm.WeightDelta.pdf", height = 4, width = 4)
-  
-
-train.set$Residuals <- model$finalModel$residuals
-train.set2 <- train.set[,-c(1:3,18,28:30,34:37)]
-
-corr <- cor(as.matrix(train.set2))
-
-pdf("corrplot.pdf", height = 10, width = 10)
-corrplot(corr, type = "upper", order = "hclust", 
-         tl.col = "black", tl.srt = 45, 
-         col = rev(COL2('RdBu', 200)))
-dev.off()
-```
-
-
-```{r}
 full.data <- merge.data(list(dat.fed,dat.fast,dat.30))
-indep.vairables <- data.cage[,c("Feed", "Drink", "Heat", "Weight", "Lean.Mass")]
+```
+
+
+
+```{r}
+data.cage <- bind_rows(full.data[[1]])
+indep.vairables <- data.cage[,c("Feed", "Drink", "Heat", "Weight", "Lean.Mass", "Fat.Mass")]
 indep.vairables <- indep.vairables %>%
    mutate("Ambulation" = sqrt(data.cage$Xamb^2 + data.cage$Yamb^2)) %>%
   mutate("Temp.Delta" = 30-data.cage$Cage_temp)
@@ -294,72 +123,182 @@ tr.data <- sample(nrow(indep.vairables), nrow(indep.vairables)*0.7)
 train.set <- indep.vairables[tr.data,]
 test.set <- indep.vairables[-tr.data,]
 
-model.spline <- npreg::sm(Heat ~  Ambulation + Feed +  Weight, data =  train.set, method = "ML")
+models <- unique(c("gam", "glm", "svmLinear", "svmRadial", "svmPoly", "glmboost", "gamboost", "earth", "spline", "rf", "knn", "rbf"))
+formulas <- c("Heat ~  Ambulation + Feed +  Weight", "Heat ~  Ambulation + Feed +  Lean.Mass", "Heat ~  Ambulation + Feed +  Fat.Mass", "Heat ~  Ambulation + Feed +  Lean.Mass + Fat.Mass")
 
-train.control <- trainControl(method="repeatedcv", number=10, repeats=20)
-model.gam <- train(Heat ~ Ambulation + Feed + Weight,
-                 method = "gam",
-                 data = train.set, 
-                 trControl = train.control)
+all.models <- list()
+all.formulas <- list()
+total.r.values <- NULL
+for(i in seq_along(models)) {
+#for(i in 9:12) {
+  for(j in seq_along(formulas)) {
+    if(models[i] == "spline") {
+      model <- npreg::sm(as.formula(formulas[j]), data =  train.set, method = "ML")
+      heat.predict <- predict(model,train.set)
+      r.values <- cor(train.set$Heat, heat.predict)^2
+      total.r.values <- c(total.r.values, r.values)
+    } else {
 
-model.glm <- train(Heat ~ Ambulation + Feed + Weight,
-                 method = "glm",
-                 data = train.set, 
-                 trControl = train.control)
+       train.control <- trainControl(method="repeatedcv", number=10, repeats=10)
+      #train.control <- trainControl(method="LOOCV")
+  
+        model <- caret::train(as.formula(formulas[j]),
+                      method = models[i],
+                      data = train.set, 
+                      trControl = train.control)
+        r.value <- max(model$results$Rsquared)
+        total.r.values <- c(total.r.values, r.value)
+        
+    }
+    all.formulas[[j]] <- model
+  }
+  all.models[[i]] <- list("models" = all.formulas, "r.squared "= total.r.values)
+  all.formulas <- list()
+  total.r.values <- NULL
+}
+dir.create("./output")
 
-saveRDS(model.spline, file = "./models/model.spline.rds")
-saveRDS(model.gam, file = "./models/model.gam.rds")
-saveRDS(model.glm, file = "./models/model.glm.rds")
+saveRDS(all.models, "./output/TrainingModels.rds")
+  #################
+  #Spline Fitting
+  ################
+  
+  heat.predict <- predict(all.models[[9]][[1]][[4]], test.set)
+  
+  df <- cbind.data.frame(test.set, heat.predict)
+  formula <- y ~ x
+  ggplot(df, aes(x=Heat, y = heat.predict)) + 
+    geom_point(stroke = 0.1) + 
+    geom_smooth(method='lm', formula= y~x, color = "red", se = TRUE)+ 
+    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "right", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3) + 
+    scale_fill_viridis(option = "H") + 
+    theme_classic() + 
+    guides(fill = "none")
+  ggsave("./output/Spline.LBMandFM.pdf", height = 4, width = 4)
+  
+  #################
+  #Random Forest Fitting
+  ################
+  heat.predict <- predict(all.models[[10]][[1]][[4]], test.set)
+  
+  df <- cbind.data.frame(test.set, heat.predict)
+  formula <- y ~ x
+  ggplot(df, aes(x=Heat, y = heat.predict)) + 
+    geom_point(stroke = 0.1) + 
+    geom_smooth(method='lm', formula= y~x, color = "red", se = TRUE) + 
+    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "right", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3) + 
+    scale_fill_viridis(option = "H") + 
+    theme_classic() + 
+    guides(fill = "none")
+  ggsave("./output/RF.LBMandFM.pdf", height = 4, width = 4)
+  
+  #################
+  #Earth Fitting
+  ################
+  heat.predict <- predict(all.models[[8]][[1]][[4]], test.set)
+  
+  df <- cbind.data.frame(test.set, heat.predict)
+  formula <- y ~ x
+  ggplot(df, aes(x=Heat, y = heat.predict)) + 
+    geom_point(stroke = 0.1) + 
+    geom_smooth(method='lm', formula= y~x, color = "red", se = TRUE) + 
+    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "right", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3) + 
+    scale_fill_viridis(option = "H") + 
+    theme_classic() + 
+    guides(fill = "none")
+  ggsave("./output/Earth.LBMandFM.pdf", height = 4, width = 4)
+  
+  #################
+  #Linear Fitting
+  ################
+  heat.predict <- predict(all.models[[2]][[1]][[4]], test.set)
+  
+  df <- cbind.data.frame(test.set, heat.predict)
+  formula <- y ~ x
+  ggplot(df, aes(x=Heat, y = heat.predict)) + 
+    geom_point(stroke = 0.1) + 
+    geom_smooth(method='lm', formula= y~x, color = "red", se = TRUE) + 
+    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "right", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3) + 
+    scale_fill_viridis(option = "H") + 
+    theme_classic() + 
+    guides(fill = "none")
+  ggsave("./output/GLM.LBMandFM.pdf", height = 4, width = 4)
+  
+  #################
+  #GAM Fitting
+  ################
+  heat.predict <- predict(all.models[[1]][[1]][[4]], test.set)
+  
+  df <- cbind.data.frame(test.set, heat.predict)
+  formula <- y ~ x
+  ggplot(df, aes(x=Heat, y = heat.predict)) + 
+    geom_point(stroke = 0.1) + 
+    geom_smooth(method='lm', formula= y~x, color = "red", se = TRUE) + 
+    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
+               label.x.npc = "right", label.y.npc = 0.15,
+               formula = formula, parse = TRUE, size = 3) + 
+    scale_fill_viridis(option = "H") + 
+    theme_classic() + 
+    guides(fill = "none")
+  ggsave("./output/GAM.LBMandFM.pdf", height = 4, width = 4)
+  
+  
+saveRDS(all.models[[9]][[1]][[4]], file = "./models/model.spline.rds")
+saveRDS(all.models[[10]][[1]][[4]], file = "./models/model.rf.rds")
+saveRDS(all.models[[2]][[1]][[4]], file = "./models/model.glm.rds")
 ```
 
-Examining the model performance 
+##################################
+#Estimating Adaptive Thermogenesis
+##################################
 
-```{r}  
-  heat.predict <- predict(model.gam, test.set)
-  
-  df <- cbind.data.frame(test.set, heat.predict)
-  formula <- y ~ x
-  ggplot(df, aes(x=Heat, y = heat.predict)) + 
-    geom_point(stroke = 0.1) + 
-    geom_smooth(method='lm', formula= y~x, color = "red", lwd = 1) + 
-    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-               label.x.npc = "right", label.y.npc = 0.15,
-               formula = formula, parse = TRUE, size = 3) + 
-    scale_fill_viridis(option = "H") + 
-    theme_classic() + 
-    guides(fill = "none")
-  ggsave("GAM.Model.pdf", height = 4, width = 4)
-  
-  
-  heat.predict <- predict(model.glm, test.set)
-  df <- cbind.data.frame(test.set, heat.predict)
-  formula <- y ~ x
-  ggplot(df, aes(x=Heat, y = heat.predict)) + 
-    geom_point(stroke = 0.1) + 
-    geom_smooth(method='lm', formula= y~x, color = "red", lwd = 1) + 
-    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-               label.x.npc = "right", label.y.npc = 0.15,
-               formula = formula, parse = TRUE, size = 3) + 
-    scale_fill_viridis(option = "H") + 
-    theme_classic() + 
-    guides(fill = "none")
-  ggsave("GLM.Model.pdf", height = 4, width = 4)
-  
-    heat.predict <- predict(model.spline, test.set)
-    heat.predict[heat.predict < 0] <- NA
-  df <- cbind.data.frame(test.set, heat.predict)
-  formula <- y ~ x
-  ggplot(df, aes(x=Heat, y = heat.predict)) + 
-    geom_point(stroke = 0.1) + 
-    geom_smooth(method='lm', formula= y~x, color = "red", lwd = 1) + 
-    stat_poly_eq(aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), 
-               label.x.npc = "right", label.y.npc = 0.15,
-               formula = formula, parse = TRUE, size = 3) + 
-    scale_fill_viridis(option = "H") + 
-    theme_classic() + 
-    guides(fill = "none")
-  ggsave("Spline.Model.pdf", height = 4, width = 4)
+```{r}
+dir.to.use <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/cage_data/2022-03-22 30C"
+meta.file <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/30.meta.csv"
+
+dat.30 <- load.data(file.dir = dir.to.use,
+                 meta.file = meta.file)
+
+dir.to.use <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/cage_data/2022-03-23 25C"
+meta.file <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/25.meta.csv"
+
+dat.25 <- load.data(file.dir = dir.to.use,
+                 meta.file = meta.file)
+
+dir.to.use <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/cage_data/2022-03-24 20C"
+meta.file <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/20.meta.csv"
+
+dat.20 <- load.data(file.dir = dir.to.use,
+                 meta.file = meta.file)
+
+dir.to.use <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/cage_data/2022-03-25 15C"
+meta.file <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/15.meta.csv"
+
+dat.15 <- load.data(file.dir = dir.to.use,
+                 meta.file = meta.file)
+
+dir.to.use <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/cage_data/2022-03-26 10C"
+meta.file <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/10.meta.csv"
+
+dat.10 <- load.data(file.dir = dir.to.use,
+                 meta.file = meta.file)
+
+dir.to.use <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/cage_data/2022-03-27 5C"
+meta.file <- "./data_sets/2022-03-22 B6 Temp Decline Metabolic Data/5.meta.csv"
+
+dat.5 <- load.data(file.dir = dir.to.use,
+                 meta.file = meta.file)
+
 ```
+
 ```{r}
 for (i in seq_along(dat.30[[1]])) {
   dat.30[[1]][[i]]$Weight <- dat.30[[2]][i,"Weight"]
@@ -396,126 +335,50 @@ for (i in seq_along(dat.5[[1]])) {
   dat.5[[1]][[i]]$Lean.Mass <- dat.5[[2]][i,"Lean.mass"]
   dat.5[[1]][[i]]$Fat.Mass <- dat.5[[2]][i,"Fat.mass"]
 }
-    
-cage.data <- dat.30
+```    
 
-library(ggplot2)
-library(viridis)
-library(dplyr)
-plot.interval.EE <- function(cage.data,
-                             sample.subset = NULL, 
-                             by.proportion = FALSE) {
-    model.spline <- readRDS( "./models/model.spline.rds")
-    model.gam <- readRDS("./models/model.gam.rds")
-    model.glm <- readRDS("./models/model.glm.rds")
-    if(!is.null(sample.subset)) {
-        cage.data <- subset.data(cage.data, sample.subset)
-    }
-    pre.plot.dat <- dplyr::bind_rows(cage.data[[1]])
-    indep.vairables <- pre.plot.dat[,c("Feed", "Drink", "Heat", "Weight", "Interval_num")]
-    indep.vairables <- indep.vairables %>%
-       mutate("Ambulation" = sqrt(pre.plot.dat$Xamb^2 + pre.plot.dat$Yamb^2)) 
-    indep.vairables <- na.omit(indep.vairables)
-    
-    outliers <- NULL
-    for(i in c(1,2,3,6)) {
-      x <- EnvStats::rosnerTest(as.matrix(indep.vairables[,i]), k = 5)$all.stats
-      x <- x[x$Value >= 1,]
-      x <- x[x$Outlier == TRUE,]
-      x <- x$Obs.Num
-      outliers <- c(outliers, x)
-    }
-    outliers <- unique(outliers)
-    indep.vairables <- indep.vairables[-outliers,]
-    
-    indep.vairables[,"Ambulation"] <- sqrt(indep.vairables[,"Ambulation"])
-    indep.vairables <- indep.vairables[indep.vairables$Heat > 5,]
-    
-    heat.gam <- predict(model.gam, indep.vairables)
-    
-    heat.spline<- npreg::predict.sm(model.spline, indep.vairables)
-    heat.spline[heat.spline < 0] <- NA
-    
-    heat.glm <- predict(model.glm, indep.vairables)
-  
-    indep.vairables <- data.frame(indep.vairables, heat.spline, heat.gam, heat.glm)
-    
-    indep.vairables$heat.mean <- rowMeans(as.matrix(indep.vairables[,c("heat.spline", "heat.gam", "heat.glm")]))
-    indep.vairables$SF <- indep.vairables$heat.mean/indep.vairables$Heat
-    indep.vairables$Ambulatory.EE <- (indep.vairables$Ambulation*0.3344)#/indep.vairables$SF
-    indep.vairables$ThermicEffect.EE <- (indep.vairables$Feed*4.346)#/indep.vairables$SF
-    
-    indep.vairables$Adaptive.EE <- indep.vairables$Heat - indep.vairables$heat.mean
-    indep.vairables$Adaptive.EE[indep.vairables$Adaptive.EE < 0] <- 0
-    
-    #indep.vairables$BMR.EE <- indep.vairables$heat.mean/indep.vairables$SF - (indep.vairables$Adaptive.EE + 8.8652 + 0.6976*indep.vairables$Weight)
-    
-    indep.vairables$BMR.EE <- indep.vairables$Heat - (indep.vairables$Adaptive.EE + indep.vairables$Ambulatory.EE + indep.vairables$ThermicEffect.EE)
-    
-    
 
-    indep.vairables <- na.omit(indep.vairables)
-  
-    EE.summary <- indep.vairables %>%
-      group_by(Interval_num) %>%
-      summarise(across(c(3,7:14), mean)) %>%
-      as.data.frame()
-  
-    melted <- reshape2::melt(EE.summary[,c(1,7:10)], id.vars = 1)
-  
-    melted$variable <- factor(melted$variable, levels = c("Adaptive.EE", "Ambulatory.EE", "ThermicEffect.EE", "BMR.EE"))
-    plot <- ggplot(melted, aes(x=as.numeric(Interval_num), y =as.numeric(value), fill = variable )) + 
-      scale_fill_viridis(option = "H", discrete = TRUE, direction = -1) + 
-      theme_classic() + 
-      ylab("Heat") + 
-      xlab("Time Interval")
-    if(by.proportion) {
-      plot <- plot + geom_bar(stat = "identity", position = "fill")
-    } else {
-      plot <- plot + geom_bar(stat = "identity")
-    }
-    return(plot)
-}
 
+```{r}
 plot.interval.EE(dat.30, 
                  by.proportion = FALSE) + 
   ylim(0,40)
-ggsave("dat.30.pdf", height = 3, width = 5)
+ggsave("./output/dat.30.pdf", height = 3, width = 5)
 plot.interval.EE(dat.30, 
                  by.proportion = TRUE)
-ggsave("dat.30.prop.pdf", height = 3, width = 5)
+ggsave("./output/dat.30.prop.pdf", height = 3, width = 5)
 
 plot.interval.EE(dat.25, 
                  by.proportion = FALSE)+ 
   ylim(0,40)
-ggsave("dat.25.pdf", height = 3, width = 5)
+ggsave("./output/dat.25.pdf", height = 3, width = 5)
 plot.interval.EE(dat.25, 
                  by.proportion = TRUE)
-ggsave("dat.25.prop.pdf", height = 3, width = 5)
+ggsave("./output/dat.25.prop.pdf", height = 3, width = 5)
 
 plot.interval.EE(dat.20, 
                  by.proportion = FALSE)+ 
   ylim(0,40)
-ggsave("dat.20.pdf", height = 3, width = 5)
+ggsave("./output/dat.20.pdf", height = 3, width = 5)
 plot.interval.EE(dat.20, 
                  by.proportion = TRUE)
-ggsave("dat.20.prop.pdf", height = 3, width =5)
+ggsave("./output/dat.20.prop.pdf", height = 3, width =5)
 
 plot.interval.EE(dat.15, 
                  by.proportion = FALSE)+ 
   ylim(0,40)
-ggsave("dat.15.pdf", height = 3, width = 5)
+ggsave("./output/dat.15.pdf", height = 3, width = 5)
 plot.interval.EE(dat.15, 
                  by.proportion = TRUE)
-ggsave("dat.15.prop.pdf", height = 3, width = 5)
+ggsave("./output/dat.15.prop.pdf", height = 3, width = 5)
 
 plot.interval.EE(dat.10, 
                  by.proportion = FALSE)+ 
   ylim(0,40)
-ggsave("dat.10.pdf", height = 3, width = 5)
+ggsave("./output/dat.10.pdf", height = 3, width = 5)
 plot.interval.EE(dat.10, 
                  by.proportion = TRUE)
-ggsave("dat.10.prop.pdf", height = 3, width = 5)
+ggsave("./output/dat.10.prop.pdf", height = 3, width = 5)
 
 plot.interval.EE(dat.5, 
                  by.proportion = FALSE)+ 
@@ -523,7 +386,7 @@ plot.interval.EE(dat.5,
 ggsave("dat.5.pdf", height = 3, width = 5)
 plot.interval.EE(dat.5, 
                  by.proportion = TRUE)
-ggsave("dat.5.prop.pdf", height = 3, width = 5)
+ggsave("./output/dat.5.prop.pdf", height = 3, width = 5)
 ```
 
 
@@ -538,10 +401,7 @@ meta.file <- "./data_sets/Atg14\ mCre\ RT\ Cold\ CLAMS\ Data/meta.flox.csv"
 
 meta <- read.csv(meta.file)
 dat.flox<- load.data(file.dir = dir.to.use,
-                 meta.file = meta.file, 
-                 equilibrate.interval = 8,
-                 contrast = "Condition",
-                      baseline = "Pre")
+                 meta.file = meta.file)
 
 dat.flox[[2]]$Weight <- as.numeric(dat.flox[[2]][1,4:11])
 
@@ -554,19 +414,21 @@ meta.file <- "./data_sets/Atg14\ mCre\ RT\ Cold\ CLAMS\ Data/meta.mCre.csv"
 meta <- read.csv(meta.file)
 dat.cre <- load.data(file.dir = dir.to.use,
                  meta.file = meta.file, 
-                 equilibrate.interval = 8,
-                contrast = "Condition",
-                      baseline = "Pre")
+                 equilibrate.interval = 8)
 
 dat.cre[[2]]$Weight <- as.numeric(dat.cre[[2]][1,4:9])
 
 for (i in seq_along(dat.flox[[1]])) {
   dat.flox[[1]][[i]]$Weight <- dat.flox[[2]][i,"Weight"]
+  dat.flox[[1]][[i]]$Lean.Mass <- dat.flox[[2]][i,"Lean.mass"]
+  dat.flox[[1]][[i]]$Fat.Mass <- ddat.flox[[2]][i,"Fat.mass"]
   dat.flox[[1]][[i]] <- dat.flox[[1]][[i]][,-c(31,32)]
 }
 
 for (i in seq_along(dat.cre[[1]])) {
   dat.cre[[1]][[i]]$Weight <- dat.cre[[2]][i,"Weight"]
+  dat.cre[[1]][[i]]$Lean.Mass <- dat.cre[[2]][i,"Lean.mass"]
+  dat.cre[[1]][[i]]$Fat.Mass <- ddat.cre[[2]][i,"Fat.mass"]
   dat.cre[[1]][[i]] <- dat.cre[[1]][[i]][,-c(31,32)]
 }
 
