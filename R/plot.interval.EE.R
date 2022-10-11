@@ -1,6 +1,7 @@
 library(ggplot2)
 library(viridis)
 library(dplyr)
+library(matrixStats)
 plot.interval.EE <- function(cage.data,
                              sample.subset = NULL, 
                              by.proportion = FALSE) {
@@ -17,8 +18,8 @@ plot.interval.EE <- function(cage.data,
   indep.vairables <- na.omit(indep.vairables)
   
   outliers <- NULL
-  for(i in c(1,2,4,5)) {
-    x <- EnvStats::rosnerTest(as.matrix(indep.vairables[,i]), k = 5)$all.stats
+  for(i in c(1:5)) {
+    x <- EnvStats::rosnerTest(as.matrix(indep.vairables[,i]), k = 10)$all.stats
     x <- x[x$Value >= 1,]
     x <- x[x$Outlier == TRUE,]
     x <- x$Obs.Num
@@ -30,7 +31,7 @@ plot.interval.EE <- function(cage.data,
   }
   
   indep.vairables[,"Ambulation"] <- sqrt(indep.vairables[,"Ambulation"])
-  indep.vairables <- indep.vairables[indep.vairables$Heat > 5,]
+  indep.vairables <- indep.vairables[indep.vairables$Heat > 6,]
   
   heat.rf <- predict(model.rf, indep.vairables)
   
@@ -41,7 +42,7 @@ plot.interval.EE <- function(cage.data,
   
   indep.vairables <- data.frame(indep.vairables, heat.spline, heat.rf, heat.glm)
   
-  indep.vairables$heat.mean <- rowMeans(as.matrix(indep.vairables[,c("heat.spline", "heat.rf", "heat.glm")]), na.rm = TRUE)
+  indep.vairables$heat.mean <- rowMedians(as.matrix(indep.vairables[,c("heat.spline", "heat.rf", "heat.glm")]), na.rm = TRUE)
   indep.vairables$SF <- indep.vairables$heat.mean/indep.vairables$Heat
   indep.vairables$Ambulatory.EE <- (indep.vairables$Ambulation*0.3228)#/indep.vairables$SF
   indep.vairables$ThermicEffect.EE <- (indep.vairables$Feed*8.4165)#/indep.vairables$SF

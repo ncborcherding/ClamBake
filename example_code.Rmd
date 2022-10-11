@@ -409,31 +409,31 @@ for (i in seq_along(dat.UCP[[1]])) {
 plot.interval.EE(dat.UCP, 
                  by.proportion = FALSE, 
                  sample.subset = names(dat.UCP[[1]])[13:16]) 
-ggsave("./output/UCP1.KO.pdf", height = 3, width = 5)
+ggsave("./output/3.30.UCP1.KO.pdf", height = 3, width = 5)
 
 plot.interval.EE(dat.UCP, 
                  by.proportion = TRUE, 
                  sample.subset = names(dat.UCP[[1]])[13:16]) 
-ggsave("./output/UCP1.KO.prop.pdf", height = 3, width = 5)
+ggsave("./output/3.30.UCP1.KO.prop.pdf", height = 3, width = 5)
 
 
 plot.interval.EE(dat.UCP, 
                  sample.subset = names(dat.UCP[[1]])[9:12]) 
-ggsave("./output/AdipoCre.KO.pdf", height = 3, width = 5)
+ggsave("./output/3.30.AdipoCre.KO.pdf", height = 3, width = 5)
 
 plot.interval.EE(dat.UCP, 
                  by.proportion = TRUE, 
                  sample.subset = names(dat.UCP[[1]])[9:12]) 
-ggsave("./output/AdipoCre.KO.prop.pdf", height = 3, width = 5)
+ggsave("./output/3.30.AdipoCre.KO.prop.pdf", height = 3, width = 5)
 
 plot.interval.EE(dat.UCP, 
                  sample.subset = names(dat.UCP[[1]])[1:8]) 
-ggsave("./output/mCre.KO.pdf", height = 3, width = 5)
+ggsave("./output/3.30.mCre.KO.pdf", height = 3, width = 5)
 
 plot.interval.EE(dat.UCP, 
                  by.proportion = TRUE, 
                  sample.subset = names(dat.UCP[[1]])[1:8]) 
-ggsave("./output/mCre.KO.prop.pdf", height = 3, width = 5)
+ggsave("./output/3.30.mCre.KO.prop.pdf", height = 3, width = 5)
 ```
 
 ```{r}
