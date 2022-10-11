@@ -391,6 +391,50 @@ ggsave("./output/dat.5.prop.pdf", height = 3, width = 5)
 
 
 
+```{r}
+dir.to.use <- "./data_sets/2021-03-30\ UCP1/cage_data/"
+meta.file <- "./data_sets/2021-03-30\ UCP1/meta.csv"
+
+meta <- read.csv(meta.file)
+dat.UCP <- load.data(file.dir = dir.to.use,
+                 meta.file = meta.file)
+
+for (i in seq_along(dat.UCP[[1]])) {
+  dat.UCP[[1]][[i]]$Weight <- dat.UCP[[2]][i,"Weight"]
+  dat.UCP[[1]][[i]]$Lean.Mass <- dat.UCP[[2]][i,"Lean.mass"]
+  dat.UCP[[1]][[i]]$Fat.Mass <- dat.UCP[[2]][i,"Fat.mass"]
+  dat.UCP[[1]][[i]] <- dat.UCP[[1]][[i]][,-c(31,32)]
+}
+
+plot.interval.EE(dat.UCP, 
+                 by.proportion = FALSE, 
+                 sample.subset = names(dat.UCP[[1]])[13:16]) 
+ggsave("./output/UCP1.KO.pdf", height = 3, width = 5)
+
+plot.interval.EE(dat.UCP, 
+                 by.proportion = TRUE, 
+                 sample.subset = names(dat.UCP[[1]])[13:16]) 
+ggsave("./output/UCP1.KO.prop.pdf", height = 3, width = 5)
+
+
+plot.interval.EE(dat.UCP, 
+                 sample.subset = names(dat.UCP[[1]])[9:12]) 
+ggsave("./output/AdipoCre.KO.pdf", height = 3, width = 5)
+
+plot.interval.EE(dat.UCP, 
+                 by.proportion = TRUE, 
+                 sample.subset = names(dat.UCP[[1]])[9:12]) 
+ggsave("./output/AdipoCre.KO.prop.pdf", height = 3, width = 5)
+
+plot.interval.EE(dat.UCP, 
+                 sample.subset = names(dat.UCP[[1]])[1:8]) 
+ggsave("./output/mCre.KO.pdf", height = 3, width = 5)
+
+plot.interval.EE(dat.UCP, 
+                 by.proportion = TRUE, 
+                 sample.subset = names(dat.UCP[[1]])[1:8]) 
+ggsave("./output/mCre.KO.prop.pdf", height = 3, width = 5)
+```
 
 
 

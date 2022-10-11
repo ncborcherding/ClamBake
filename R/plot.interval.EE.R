@@ -41,7 +41,7 @@ plot.interval.EE <- function(cage.data,
   
   indep.vairables <- data.frame(indep.vairables, heat.spline, heat.rf, heat.glm)
   
-  indep.vairables$heat.mean <- rowMeans(as.matrix(indep.vairables[,c("heat.spline", "heat.rf", "heat.glm")]))
+  indep.vairables$heat.mean <- rowMeans(as.matrix(indep.vairables[,c("heat.spline", "heat.rf", "heat.glm")]), na.rm = TRUE)
   indep.vairables$SF <- indep.vairables$heat.mean/indep.vairables$Heat
   indep.vairables$Ambulatory.EE <- (indep.vairables$Ambulation*0.3228)#/indep.vairables$SF
   indep.vairables$ThermicEffect.EE <- (indep.vairables$Feed*8.4165)#/indep.vairables$SF
@@ -62,7 +62,7 @@ plot.interval.EE <- function(cage.data,
     vjustvar = c(1))
   
   
-  indep.vairables <- na.omit(indep.vairables)
+  #indep.vairables <- na.omit(indep.vairables)
   
   EE.summary <- indep.vairables %>%
     group_by(Interval_num) %>%
