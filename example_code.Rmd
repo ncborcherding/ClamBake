@@ -448,6 +448,42 @@ for (i in seq_len(length(dat.UCP[[1]]))) {
 ```
 
 
+#
+
+```{r}
+dir.to.use <- "./data_sets/2022-07-25 Taku/cage_data/"
+meta.file <- "./data_sets/2022-07-25 Taku/meta.csv"
+
+meta <- read.csv(meta.file)
+dat.Taku <- load.data(file.dir = dir.to.use,
+                 meta.file = meta.file)
+
+for (i in seq_along(dat.Taku[[1]])) {
+  dat.Taku[[1]][[i]]$Weight <- dat.Taku[[2]][i,"Weight"]
+  dat.Taku[[1]][[i]]$Lean.Mass <- dat.Taku[[2]][i,"Lean.mass"]
+  dat.Taku[[1]][[i]]$Fat.Mass <- dat.Taku[[2]][i,"Fat.mass"]
+  dat.Taku[[1]][[i]] <- dat.Taku[[1]][[i]][,-c(31,32)]
+  #Subsetting only the last couple of days
+  dat.Taku[[1]][[i]] <- dat.Taku[[1]][[i]][c(2860:nrow(dat.Taku[[1]][[i]])),]
+}
+
+x <- dat.Taku[[1]][[i]]
+
+for (i in seq_len(length(dat.Taku [[1]]))) {
+  plot.interval.EE(dat.Taku , 
+                   by.proportion = FALSE, 
+                   sample.subset = names(dat.Taku [[1]])[i]) 
+  ggsave(paste0("./output/7.25.cage", str_split(names(dat.Taku[[1]])[i], "[.]", simplify = TRUE)[,2], "_", dat.Taku [[2]]$Comments[i], ".pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.Taku , 
+                   by.proportion = TRUE, 
+                   sample.subset = names(dat.Taku [[1]])[i]) 
+  ggsave(paste0("./output/7.25.cage", str_split(names(dat.Taku[[1]])[i], "[.]", simplify = TRUE)[,2], "_", dat.Taku[[2]]$Comments[i], ".proportion.pdf"), height = 3, width = 5)
+}
+```
+
+
+#ATG14 mice - plotting individual mice
 
 ```{r}
 dir.to.use <- "./data_sets/Atg14\ mCre\ RT\ Cold\ CLAMS\ Data/cage_data/flox"
