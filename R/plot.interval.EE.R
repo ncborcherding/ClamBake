@@ -25,7 +25,7 @@ plot.interval.EE <- function(cage.data,
     x <- x$Obs.Num
     outliers <- c(outliers, x)
   }
-  outliers <- unique(outliers)
+  outliers <- na.omit(unique(outliers))
   if (length(outliers) > 0) {
     indep.vairables <- indep.vairables[-outliers,]
   }
