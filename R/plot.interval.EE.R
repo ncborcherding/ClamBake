@@ -18,7 +18,7 @@ plot.interval.EE <- function(cage.data,
   indep.vairables <- na.omit(indep.vairables)
   
   outliers <- NULL
-  for(i in c(1:5)) {
+  for(i in c(1:3,7)) {
     x <- EnvStats::rosnerTest(as.matrix(indep.vairables[,i]), k = 10)$all.stats
     x <- x[x$Value >= 1,]
     x <- x[x$Outlier == TRUE,]

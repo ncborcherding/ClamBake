@@ -406,34 +406,17 @@ for (i in seq_along(dat.UCP[[1]])) {
   dat.UCP[[1]][[i]] <- dat.UCP[[1]][[i]][,-c(31,32)]
 }
 
-plot.interval.EE(dat.UCP, 
-                 by.proportion = FALSE, 
-                 sample.subset = names(dat.UCP[[1]])[13:16]) 
-ggsave("./output/3.30.UCP1.KO.pdf", height = 3, width = 5)
-
-plot.interval.EE(dat.UCP, 
-                 by.proportion = TRUE, 
-                 sample.subset = names(dat.UCP[[1]])[13:16]) 
-ggsave("./output/3.30.UCP1.KO.prop.pdf", height = 3, width = 5)
-
-
-plot.interval.EE(dat.UCP, 
-                 sample.subset = names(dat.UCP[[1]])[9:12]) 
-ggsave("./output/3.30.AdipoCre.KO.pdf", height = 3, width = 5)
-
-plot.interval.EE(dat.UCP, 
-                 by.proportion = TRUE, 
-                 sample.subset = names(dat.UCP[[1]])[9:12]) 
-ggsave("./output/3.30.AdipoCre.KO.prop.pdf", height = 3, width = 5)
-
-plot.interval.EE(dat.UCP, 
-                 sample.subset = names(dat.UCP[[1]])[1:8]) 
-ggsave("./output/3.30.mCre.KO.pdf", height = 3, width = 5)
-
-plot.interval.EE(dat.UCP, 
-                 by.proportion = TRUE, 
-                 sample.subset = names(dat.UCP[[1]])[1:8]) 
-ggsave("./output/3.30.mCre.KO.prop.pdf", height = 3, width = 5)
+for (i in seq_len(length(dat.UCP[[1]]))) {
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = FALSE, 
+                   sample.subset = names(dat.UCP[[1]])[i]) 
+  ggsave(paste0("./output/3.30.cage", str_split(names(dat.UCP[[1]])[i], "[.]", simplify = TRUE)[,2], "_", dat.UCP[[2]]$Comments[i], ".pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = TRUE, 
+                   sample.subset = names(dat.UCP[[1]])[i]) 
+  ggsave(paste0("./output/3.30.cage", str_split(names(dat.UCP[[1]])[i], "[.]", simplify = TRUE)[,2], "_", dat.UCP[[2]]$Comments[i], ".proportion.pdf"), height = 3, width = 5)
+}
 ```
 
 ```{r}
@@ -451,43 +434,17 @@ for (i in seq_along(dat.UCP[[1]])) {
   dat.UCP[[1]][[i]] <- dat.UCP[[1]][[i]][,-c(31,32)]
 }
 
-plot.interval.EE(dat.UCP, 
-                 by.proportion = FALSE, 
-                 sample.subset = names(dat.UCP[[1]])[1:4]) 
-ggsave("./output/10.1.UCP1.KO.pdf", height = 3, width = 5)
-
-plot.interval.EE(dat.UCP, 
-                 by.proportion = TRUE, 
-                 sample.subset = names(dat.UCP[[1]])[1:4]) 
-ggsave("./output/10.1.UCP1.KO.prop.pdf", height = 3, width = 5)
-
-
-plot.interval.EE(dat.UCP, 
-                 sample.subset = names(dat.UCP[[1]])[5:7]) 
-ggsave("./output/10.1.AdipoCre.KO.pdf", height = 3, width = 5)
-
-plot.interval.EE(dat.UCP, 
-                 by.proportion = TRUE, 
-                 sample.subset = names(dat.UCP[[1]])[5:7]) 
-ggsave("./output/10.1.AdipoCre.KO.prop.pdf", height = 3, width = 5)
-
-plot.interval.EE(dat.UCP, 
-                 sample.subset = names(dat.UCP[[1]])[c(8:10,12,14)]) 
-ggsave("./output/10.1.Flox.pdf", height = 3, width = 5)
-
-plot.interval.EE(dat.UCP, 
-                 by.proportion = TRUE, 
-                 sample.subset = names(dat.UCP[[1]])[c(8:10,12,14)]) 
-ggsave("./output/10.1.Flox.prop.pdf", height = 3, width = 5)
-
-plot.interval.EE(dat.UCP, 
-                 sample.subset = names(dat.UCP[[1]])[c(11,13,15:16)]) 
-ggsave("./output/10.1.mCre.pdf", height = 3, width = 5)
-
-plot.interval.EE(dat.UCP, 
-                 by.proportion = TRUE, 
-                 sample.subset = names(dat.UCP[[1]])[c(11,13,15:16)]) 
-ggsave("./output/10.1.mCre.prop.pdf", height = 3, width = 5)
+for (i in seq_len(length(dat.UCP[[1]]))) {
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = FALSE, 
+                   sample.subset = names(dat.UCP[[1]])[i]) 
+  ggsave(paste0("./output/10.1.cage", str_split(names(dat.UCP[[1]])[i], "[.]", simplify = TRUE)[,2], "_", dat.UCP[[2]]$Comments[i], ".pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = TRUE, 
+                   sample.subset = names(dat.UCP[[1]])[i]) 
+  ggsave(paste0("./output/10.1.cage", str_split(names(dat.UCP[[1]])[i], "[.]", simplify = TRUE)[,2], "_", dat.UCP[[2]]$Comments[i], ".proportion.pdf"), height = 3, width = 5)
+}
 ```
 
 
