@@ -5,7 +5,7 @@ library(matrixStats)
 plot.interval.EE <- function(cage.data,
                              sample.subset = NULL, 
                              by.proportion = FALSE) {
-  model.spline <- readRDS( "./models/model.spline.rds")
+  model.spline <- readRDS( "./models/model.earth.rds")
   model.rf <- readRDS("./models/model.rf.rds")
   model.glm <- readRDS("./models/model.glm.rds")
   if(!is.null(sample.subset)) {
@@ -78,11 +78,105 @@ plot.interval.EE <- function(cage.data,
     theme_classic() + 
     ylab("Heat") + 
     xlab("Time Interval") 
-  if(by.proportion) {
-    plot <- plot + geom_bar(aes(fill = variable), stat = "identity", position = "fill")
-  } else {
-    plot <- plot + geom_bar(aes(fill = variable), stat = "identity")
+  if(!plot.area) {
+    if (by.proportion) {
+      plot <- plot + geom_bar(aes(fill = variable), stat = "identity", position = "fill")
+    } else {
+      plot <- plot + geom_bar(aes(fill = variable), stat = "identity")
+    }
+  if (plot.area){
+    if (by.proportion) {
+      plot <- plot +stat_smooth(formula = y ~ s(x, bs = "cs"),
+                                geom = 'area', 
+                                method = 'gam', 
+                                position = "fill",
+                                span = 1/3,
+                                aes(fill = variable))
+    } else {
+     plot <- plot +stat_smooth(formula = y ~ s(x, bs = "cs"),
+                        geom = 'area', 
+                        method = 'gam', 
+                        position = "stack",
+                        span = 1/3,
+                        aes(fill = variable))
+    }
   }
   plot <- plot + geom_text(data=annotations,aes(x=xpos,y=ypos,hjust=hjustvar,vjust=vjustvar,label=annotateText), size = 2)
   return(plot)
+}
+
+plot.EE <- function(cage.data,
+                    sample.subset = NULL, 
+                    by.proportion = FALSE) {
+  model.spline <- readRDS( "./models/model.spline.rds")
+  model.rf <- readRDS("./models/model.rf.rds")
+  model.glm <- readRDS("./models/model.glm.rds")
+  if(!is.null(sample.subset)) {
+    cage.data <- subset.data(cage.data, sample.subset)
+  }
+  pre.plot.dat <- dplyr::bind_rows(cage.data[[1]])
+  indep.vairables <- pre.plot.dat[,c("Feed", "Drink", "Heat", "Fat.Mass", "Lean.Mass", "Interval_num")]
+  indep.vairables <- indep.vairables %>%
+    mutate("Ambulation" = sqrt(pre.plot.dat$Xamb^2 + pre.plot.dat$Yamb^2)) 
+  indep.vairables <- na.omit(indep.vairables)
+  
+  outliers <- NULL
+  for(i in c(1:3,7)) {
+    x <- EnvStats::rosnerTest(as.matrix(indep.vairables[,i]), k = 10)$all.stats
+    x <- x[x$Value >= 1,]
+    x <- x[x$Outlier == TRUE,]
+    x <- x$Obs.Num
+    outliers <- c(outliers, x)
+  }
+  outliers <- na.omit(unique(outliers))
+  if (length(outliers) > 0) {
+    indep.vairables <- indep.vairables[-outliers,]
+  }
+  
+  indep.vairables[,"Ambulation"] <- sqrt(indep.vairables[,"Ambulation"])
+  indep.vairables <- indep.vairables[indep.vairables$Heat > 6,]
+  
+  heat.rf <- predict(model.rf, indep.vairables)
+  
+  heat.spline<- suppressWarnings(npreg::predict.sm(model.spline, indep.vairables))
+  heat.spline[heat.spline < 0] <- NA
+  
+  heat.glm <- predict(model.glm, indep.vairables)
+  
+  indep.vairables <- data.frame(indep.vairables, heat.spline, heat.rf, heat.glm)
+  
+  indep.vairables$heat.mean <- rowMedians(as.matrix(indep.vairables[,c("heat.spline", "heat.rf", "heat.glm")]), na.rm = TRUE)
+  indep.vairables$SF <- indep.vairables$heat.mean/indep.vairables$Heat
+  indep.vairables$Ambulatory.EE <- (indep.vairables$Ambulation*0.3228)#/indep.vairables$SF
+  indep.vairables$ThermicEffect.EE <- (indep.vairables$Feed*8.4165)#/indep.vairables$SF
+  
+  indep.vairables$Adaptive.EE <- indep.vairables$Heat - indep.vairables$heat.mean
+  indep.vairables$Adaptive.EE[indep.vairables$Adaptive.EE < 0] <- 0
+  
+  x <- indep.vairables$heat.mean/indep.vairables$SF - (indep.vairables$Adaptive.EE + 8.4165 + 0.3228*indep.vairables$Feed)
+  
+  indep.vairables$unadjusted.BMR.EE <- indep.vairables$Heat - (indep.vairables$Adaptive.EE + indep.vairables$Ambulatory.EE + indep.vairables$ThermicEffect.EE)
+  indep.vairables$BMR.EE <- indep.vairables$unadjusted.BMR.EE*indep.vairables$SF
+  #indep.vairables <- na.omit(indep.vairables)
+  
+  EE.summary <- indep.vairables %>%
+    summarise(across(c(3,8:ncol(indep.vairables)), mean)) %>%
+    as.data.frame()
+  
+  melted <- reshape2::melt(EE.summary[,c(7:10)])
+  
+  melted$variable <- factor(melted$variable, levels = c("Adaptive.EE", "Ambulatory.EE", "ThermicEffect.EE", "BMR.EE"))
+  plot <- ggplot(melted, aes(x=1, y =as.numeric(value))) + 
+    scale_fill_viridis(option = "H", discrete = TRUE, direction = -1) + 
+    theme_classic() + 
+    ylab("Heat") + 
+    theme(axis.title.x = element_blank(), 
+          axis.ticks.x = element_blank(),
+          axis.text.x = element_blank())
+    if(by.proportion) {
+      plot <- plot + geom_bar(aes(fill = variable), stat = "identity", position = "fill")
+    } else {
+    plot <- plot + geom_bar(aes(fill = variable), stat = "identity")
+    }
+  
 }

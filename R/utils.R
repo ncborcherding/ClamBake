@@ -21,3 +21,17 @@ subset.data <- function(original.dat, samples) {
   return(original.dat)
 }
 
+library(stringr)
+library(chron)
+time.handler <- function(pre.plot.dat) {
+ 
+  dtime <- str_split(pre.plot.dat$Time, " ", simplify = TRUE)[,2]
+  no.dates <- which(dtime %in% c("AM", "PM"))
+  actual.time <- str_split(pre.plot.dat$Time[no.dates], " ", simplify = TRUE)[,1]
+  dtime[no.dates] <- actual.time
+  dtime <- chron(time = dtime, format = c("h:m:s"))
+  
+  dtime2 <- as.POSIXct(dtime, format = "%H:%M:%S")
+  time.of.day <- str_split(pre.plot.dat$Time, " ", simplify = TRUE)[,3]
+  dtime2 <- ifelse(time.of.day == "PM", dtime2 + 12*60*60, dtime)
+}
