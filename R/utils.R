@@ -31,7 +31,7 @@ time.handler <- function(pre.plot.dat) {
   dtime[no.dates] <- actual.time
   dtime <- chron(time = dtime, format = c("h:m:s"))
   
-  dtime2 <- as.POSIXct(dtime, format = "%H:%M:%S")
+  dtime2 <- as.POSIXlt(dtime, format = "%H:%M:%S")
   time.of.day <- str_split(pre.plot.dat$Time, " ", simplify = TRUE)[,3]
   dtime2 <- ifelse(time.of.day == "PM", dtime2 + 12*60*60, dtime)
 }

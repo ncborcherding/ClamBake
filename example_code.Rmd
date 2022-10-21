@@ -359,7 +359,7 @@ ggsave("./output/dat.25.prop.pdf", height = 3, width = 5)
 plot.interval.EE(dat.20, 
                  by.proportion = FALSE)+ 
   ylim(0,40)
-ggsave("./output/dat.20.pdf", height = 3, width = 5)
+ggsave("./output/dat.20v2.pdf", height = 3, width = 5)
 plot.interval.EE(dat.20, 
                  by.proportion = TRUE)
 ggsave("./output/dat.20.prop.pdf", height = 3, width =5)
@@ -417,6 +417,11 @@ for (i in seq_len(length(dat.UCP[[1]]))) {
                    sample.subset = names(dat.UCP[[1]])[i]) 
   ggsave(paste0("./output/3.30.cage", str_split(names(dat.UCP[[1]])[i], "[.]", simplify = TRUE)[,2], "_", dat.UCP[[2]]$Comments[i], ".proportion.pdf"), height = 3, width = 5)
 }
+
+ plot.interval.EE(dat.UCP, 
+                   by.proportion = FALSE, 
+                   sample.subset = names(dat.UCP[[1]])[c(1,4,5,7,8)], 
+                  plot.area = TRUE)
 ```
 
 ```{r}

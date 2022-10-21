@@ -4,7 +4,8 @@ library(dplyr)
 library(matrixStats)
 plot.interval.EE <- function(cage.data,
                              sample.subset = NULL, 
-                             by.proportion = FALSE) {
+                             by.proportion = FALSE, 
+                             plot.area = FALSE) {
   model.spline <- readRDS( "./models/model.earth.rds")
   model.rf <- readRDS("./models/model.rf.rds")
   model.glm <- readRDS("./models/model.glm.rds")
@@ -35,25 +36,52 @@ plot.interval.EE <- function(cage.data,
   
   heat.rf <- predict(model.rf, indep.vairables)
   
-  heat.spline<- suppressWarnings(npreg::predict.sm(model.spline, indep.vairables))
+  heat.spline<- predict(model.spline, indep.vairables)
   heat.spline[heat.spline < 0] <- NA
   
   heat.glm <- predict(model.glm, indep.vairables)
   
-  indep.vairables <- data.frame(indep.vairables, heat.spline, heat.rf, heat.glm)
+  indep.vairables <- data.frame(indep.vairables, heat.spline = as.vector(heat.spline), heat.rf, heat.glm)
   
   indep.vairables$heat.mean <- rowMedians(as.matrix(indep.vairables[,c("heat.spline", "heat.rf", "heat.glm")]), na.rm = TRUE)
-  indep.vairables$SF <- indep.vairables$heat.mean/indep.vairables$Heat
-  indep.vairables$Ambulatory.EE <- (indep.vairables$Ambulation*0.3228)#/indep.vairables$SF
-  indep.vairables$ThermicEffect.EE <- (indep.vairables$Feed*8.4165)#/indep.vairables$SF
+  
+  ######################
+  #General Calculations
+  #####################
+  SF <- indep.vairables$heat.mean/indep.vairables$Heat
+  indep.vairables$SF <- 1 + (1-SF)/1.5
+  indep.vairables$Ambulatory.EE <- (indep.vairables$Ambulation*0.3228)/indep.vairables$SF
+  indep.vairables$ThermicEffect.EE <- (indep.vairables$Feed*8.4165)/indep.vairables$SF
   
   indep.vairables$Adaptive.EE <- indep.vairables$Heat - indep.vairables$heat.mean
   indep.vairables$Adaptive.EE[indep.vairables$Adaptive.EE < 0] <- 0
   
-  #indep.vairables$BMR.EE <- indep.vairables$heat.mean/indep.vairables$SF - (indep.vairables$Adaptive.EE + 8.8652 + 0.6976*indep.vairables$Weight)
-  
   indep.vairables$BMR.EE <- indep.vairables$Heat - (indep.vairables$Adaptive.EE + indep.vairables$Ambulatory.EE + indep.vairables$ThermicEffect.EE)
-  
+  median.BMR <- median(indep.vairables$BMR.EE, na.rm = T)
+  ################
+  #What if BMR is crazy?
+  #######################
+  off.BMR <- which(indep.vairables$BMR.EE < median.BMR-2)
+  if (any(off.BMR)) {
+    for(i in seq_along(off.BMR)) {
+      indep.vairables$BMR.EE[off.BMR[i]] <- median.BMR
+      remainder.EE <- indep.vairables$Heat[off.BMR[i]] - (indep.vairables$BMR.EE[off.BMR[i]] + indep.vairables$Adaptive.EE[off.BMR[i]])
+      if(remainder.EE <= 0) {
+        indep.vairables$Ambulatory.EE[off.BMR[i]] <- 0
+        indep.vairables$ThermicEffect.EE[off.BMR[i]] <- 0
+        indep.vairables$Adaptive.EE[off.BMR[i]] <- 0
+      } else {
+        ratio <- indep.vairables$Ambulatory.EE[off.BMR[i]]/indep.vairables$ThermicEffect.EE[off.BMR[i]]
+        if (ratio < 1) {
+          ratio <- 1-ratio
+          indep.vairables$ThermicEffect.EE[off.BMR[i]] <- remainder.EE*ratio
+        } else {
+        indep.vairables$ThermicEffect.EE[off.BMR[i]] <- remainder.EE/ratio
+        }
+        indep.vairables$Ambulatory.EE[off.BMR[i]] <- remainder.EE - indep.vairables$ThermicEffect.EE[off.BMR[i]]
+      }
+    }
+  }
   rho <- cor.test(indep.vairables$Heat, indep.vairables$heat.mean)
   annotations <- data.frame(
     xpos = c(-Inf),
@@ -84,20 +112,19 @@ plot.interval.EE <- function(cage.data,
     } else {
       plot <- plot + geom_bar(aes(fill = variable), stat = "identity")
     }
+  }
   if (plot.area){
     if (by.proportion) {
       plot <- plot +stat_smooth(formula = y ~ s(x, bs = "cs"),
                                 geom = 'area', 
                                 method = 'gam', 
                                 position = "fill",
-                                span = 1/3,
                                 aes(fill = variable))
     } else {
      plot <- plot +stat_smooth(formula = y ~ s(x, bs = "cs"),
                         geom = 'area', 
                         method = 'gam', 
                         position = "stack",
-                        span = 1/3,
                         aes(fill = variable))
     }
   }
