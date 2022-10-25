@@ -472,7 +472,7 @@ plot.interval.EE(dat.UCP,
   
   plot.interval.EE(dat.UCP, 
                    by.proportion = FALSE, 
-                   sample.subset = names(dat.UCP[[1]])[c(9:11)]) 
+                   sample.subset = names(dat.UCP[[1]])[c(13:16)]) 
   ggsave(paste0("./output/3.30.cage_WBKO.pdf"), height = 3, width = 5)
   
   plot.interval.EE(dat.UCP, 
