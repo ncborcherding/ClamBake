@@ -22,7 +22,6 @@ subset.data <- function(original.dat, samples) {
 }
 
 library(stringr)
-library(chron)
 time.handler <- function(pre.plot.dat) {
   dtime <- str_split(pre.plot.dat$Time, " ", simplify = TRUE)[,2]
   no.dates <- which(dtime %in% c("AM", "PM"))
@@ -38,5 +37,9 @@ time.handler <- function(pre.plot.dat) {
   midnights <- which(grepl("12", str_split(dtime, ":", simplify = TRUE)[,1]) & time.of.day == "AM")
   dtime2[midnights] <- dtime2[midnights] - + 12*60*60
   
-  
+  day <- which(dtime2 >= as.POSIXct("06:00:00", format = "%H:%M:%S") & dtime2 <= as.POSIXct("18:00:00", format = "%H:%M:%S"))
+  pre.plot.dat$time.cycle <- "night"
+  pre.plot.dat$time.cycle[day] <- "day"
+  pre.plot.dat <- pre.plot.dat[,c("Interval_num", "time.cycle")]
+  return(pre.plot.dat)
 }

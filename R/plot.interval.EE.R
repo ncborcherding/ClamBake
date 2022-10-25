@@ -13,6 +13,7 @@ plot.interval.EE <- function(cage.data,
     cage.data <- subset.data(cage.data, sample.subset)
   }
   pre.plot.dat <- dplyr::bind_rows(cage.data[[1]])
+  interval.assignments <- time.handler(pre.plot.dat)
   indep.vairables <- pre.plot.dat[,c("Feed", "Drink", "Heat", "Fat.Mass", "Lean.Mass", "Interval_num")]
   indep.vairables <- indep.vairables %>%
     mutate("Ambulation" = sqrt(pre.plot.dat$Xamb^2 + pre.plot.dat$Yamb^2)) 
@@ -83,9 +84,24 @@ plot.interval.EE <- function(cage.data,
     as.data.frame()
   
   melted <- reshape2::melt(EE.summary[,c(1,7:10)], id.vars = 1)
-  
+  melted <- unique(merge(melted, interval.assignments, by = 1))
   melted$variable <- factor(melted$variable, levels = c("Adaptive.EE", "Ambulatory.EE", "ThermicEffect.EE", "BMR.EE"))
+  
+  melted$Interval_num[which(melted$time.cycle == "night")]
+  if(!by.proportion) {
+    top.bar <- round(max(indep.vairables$Heat)) / median(table(melted$Interval_num))
+  } else {
+    top.bar = 1.2 / median(table(melted$Interval_num))
+  }
+
   plot <- ggplot(melted, aes(x=as.numeric(Interval_num), y =as.numeric(value))) + 
+    stat_summary(data = subset(melted, time.cycle == "night"), 
+             geom = "bar", 
+             fun = sum,
+             mapping = aes(x=as.numeric(Interval_num), y =top.bar), 
+             color = "grey", 
+             lwd = 0, 
+             alpha = 0.5) + 
     scale_fill_viridis(option = "H", discrete = TRUE, direction = -1) + 
     theme_classic() + 
     ylab("Heat") + 
