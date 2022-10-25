@@ -352,7 +352,7 @@ plot.interval.EE(dat.25,
                  by.proportion = FALSE)+ 
   ylim(0,40)
 ggsave("./output/dat.25.pdf", height = 3, width = 5)
-plot.interval.EE(dat.25, 
+plot.interval.EE(dat.25,  
                  by.proportion = TRUE)
 ggsave("./output/dat.25.prop.pdf", height = 3, width = 5)
 
@@ -383,7 +383,7 @@ ggsave("./output/dat.10.prop.pdf", height = 3, width = 5)
 plot.interval.EE(dat.5, 
                  by.proportion = FALSE)+ 
   ylim(0,40)
-ggsave("dat.5.pdf", height = 3, width = 5)
+ggsave("./output/dat.5.pdf", height = 3, width = 5)
 plot.interval.EE(dat.5, 
                  by.proportion = TRUE)
 ggsave("./output/dat.5.prop.pdf", height = 3, width = 5)
@@ -417,11 +417,98 @@ for (i in seq_len(length(dat.UCP[[1]]))) {
                    sample.subset = names(dat.UCP[[1]])[i]) 
   ggsave(paste0("./output/3.30.cage", str_split(names(dat.UCP[[1]])[i], "[.]", simplify = TRUE)[,2], "_", dat.UCP[[2]]$Comments[i], ".proportion.pdf"), height = 3, width = 5)
 }
+############
+#mCre
+#######
 
- plot.interval.EE(dat.UCP, 
+plot.interval.EE(dat.UCP, 
+                   by.proportion = FALSE, 
+                   sample.subset = names(dat.UCP[[1]])[c(1,4,5,7,8)]) 
+  ggsave(paste0("./output/3.30.cage_mCre+.pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = TRUE, 
+                   sample.subset = names(dat.UCP[[1]])[c(1,4,5,7,8)]) 
+  ggsave(paste0("./output/3.30.cage_mCre+_Prop.pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
                    by.proportion = FALSE, 
                    sample.subset = names(dat.UCP[[1]])[c(1,4,5,7,8)], 
-                  plot.area = TRUE)
+                   plot.area = TRUE) 
+  ggsave(paste0("./output/3.30.cage_mCre+_area.pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = TRUE, 
+                   sample.subset = names(dat.UCP[[1]])[c(1,4,5,7,8)], 
+                   plot.area = TRUE) 
+  ggsave(paste0("./output/3.30.cage_mCre+_Prop_area.pdf"), height = 3, width = 5)
+  ########
+  #AdipoqCre
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = FALSE, 
+                   sample.subset = names(dat.UCP[[1]])[c(9:11)]) 
+  ggsave(paste0("./output/3.30.cage_aCre+.pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = TRUE, 
+                   sample.subset = names(dat.UCP[[1]])[c(9:11)]) 
+  ggsave(paste0("./output/3.30.cage_aCre+_Prop.pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = FALSE, 
+                   sample.subset = names(dat.UCP[[1]])[c(9:11)], 
+                   plot.area = TRUE) 
+  ggsave(paste0("./output/3.30.cage_aCre+_area.pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = TRUE, 
+                   sample.subset = names(dat.UCP[[1]])[c(9:11)], 
+                   plot.area = TRUE) 
+  ggsave(paste0("./output/3.30.cage_aCre+_Prop_area.pdf"), height = 3, width = 5)
+  
+  ########
+  #WBKO
+  #########
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = FALSE, 
+                   sample.subset = names(dat.UCP[[1]])[c(9:11)]) 
+  ggsave(paste0("./output/3.30.cage_WBKO.pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = TRUE, 
+                   sample.subset = names(dat.UCP[[1]])[c(13:16)]) 
+  ggsave(paste0("./output/3.30.cage_WBKO_Prop.pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = FALSE, 
+                   sample.subset = names(dat.UCP[[1]])[c(13:16)], 
+                   plot.area = TRUE) 
+  ggsave(paste0("./output/3.30.cage_WBKO_area.pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = TRUE, 
+                   sample.subset = names(dat.UCP[[1]])[c(13:16)], 
+                   plot.area = TRUE) 
+  ggsave(paste0("./output/3.30.cage_WBKO_Prop_area.pdf"), height = 3, width = 5)
+  
+  plot.EE(dat.UCP, 
+                   by.proportion = FALSE, 
+                   sample.subset = names(dat.UCP[[1]])[c(13:16)]) + 
+  ylim(0,20)
+  ggsave(paste0("./output/3.30.cage_WBKO_singlecolumn.pdf"), height = 3, width = 3)
+  
+  plot.EE(dat.UCP, 
+                   by.proportion = FALSE, 
+                   sample.subset = names(dat.UCP[[1]])[c(9:11)]) + 
+  ylim(0,20)
+  ggsave(paste0("./output/3.30.cage_aCre+_singlecolumn.pdf"), height = 3, width = 3)
+    plot.EE(dat.UCP, 
+                   by.proportion = FALSE, 
+                   sample.subset = names(dat.UCP[[1]])[c(1,4,5,7,8)]) + 
+  ylim(0,20)
+    ggsave(paste0("./output/3.30.cage_mCre+_singlecolumn.pdf"), height = 3, width = 3)
+  
 ```
 
 ```{r}
@@ -450,6 +537,80 @@ for (i in seq_len(length(dat.UCP[[1]]))) {
                    sample.subset = names(dat.UCP[[1]])[i]) 
   ggsave(paste0("./output/10.1.cage", str_split(names(dat.UCP[[1]])[i], "[.]", simplify = TRUE)[,2], "_", dat.UCP[[2]]$Comments[i], ".proportion.pdf"), height = 3, width = 5)
 }
+
+############
+#mCre
+#######
+
+plot.interval.EE(dat.UCP, 
+                   by.proportion = FALSE, 
+                   sample.subset = names(dat.UCP[[1]])[c(2,5,8,14)]) 
+  ggsave(paste0("./output/10.1.cage_flox.pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = TRUE, 
+                   sample.subset = names(dat.UCP[[1]])[c(2,5,8,14)]) 
+  ggsave(paste0("./output/10.1.cage_flox_Prop.pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = FALSE, 
+                   sample.subset = names(dat.UCP[[1]])[c(2,5,8,14)], 
+                   plot.area = TRUE) 
+  ggsave(paste0("./output/10.1.cage_flox_area.pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = TRUE, 
+                   sample.subset = names(dat.UCP[[1]])[c(2,5,8,14)], 
+                   plot.area = TRUE) 
+  ggsave(paste0("./output/10.1.cage_flox_Prop_area.pdf"), height = 3, width = 5)
+  ########
+  #AdipoqCre
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = FALSE, 
+                   sample.subset = names(dat.UCP[[1]])[c(4,10,12)]) 
+  ggsave(paste0("./output/10.1.cage_aCre+.pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = TRUE, 
+                   sample.subset = names(dat.UCP[[1]])[c(4,10,12)]) 
+  ggsave(paste0("./output/10.1.cage_aCre+_Prop.pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = FALSE, 
+                   sample.subset = names(dat.UCP[[1]])[c(4,10,12)], 
+                   plot.area = TRUE) 
+  ggsave(paste0("./output/10.1.cage_aCre+_area.pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = TRUE, 
+                   sample.subset = names(dat.UCP[[1]])[c(4,10,12)], 
+                   plot.area = TRUE) 
+  ggsave(paste0("./output/10.1.cage_aCre+_Prop_area.pdf"), height = 3, width = 5)
+  
+  ########
+  #WBKO
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = FALSE, 
+                   sample.subset = names(dat.UCP[[1]])[c(1,6,9,13)]) 
+  ggsave(paste0("./output/10.1.cage_WBKO.pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = TRUE, 
+                   sample.subset = names(dat.UCP[[1]])[c(1,6,9,13)]) 
+  ggsave(paste0("./output/10.1.cage_WBKO_Prop.pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = FALSE, 
+                   sample.subset = names(dat.UCP[[1]])[c(1,6,9,13)], 
+                   plot.area = TRUE) 
+  ggsave(paste0("./output/10.1.cage_WBKO_area.pdf"), height = 3, width = 5)
+  
+   plot.interval.EE(dat.UCP, 
+                   by.proportion = TRUE, 
+                   sample.subset = names(dat.UCP[[1]])[c(1,6,9,13)], 
+                   plot.area = TRUE) 
+  ggsave(paste0("./output/10.1.cage_WBKO_prop_area.pdf"), height = 3, width = 5)
+  
 ```
 
 
@@ -485,6 +646,57 @@ for (i in seq_len(length(dat.Taku [[1]]))) {
                    sample.subset = names(dat.Taku [[1]])[i]) 
   ggsave(paste0("./output/7.25.cage", str_split(names(dat.Taku[[1]])[i], "[.]", simplify = TRUE)[,2], "_", dat.Taku[[2]]$Comments[i], ".proportion.pdf"), height = 3, width = 5)
 }
+
+############
+#Control
+##########
+
+plot.interval.EE(dat.UCP, 
+                   by.proportion = FALSE, 
+                   sample.subset = names(dat.UCP[[1]])[c(2,5,6,8)]) 
+  ggsave(paste0("./output/7.25.TAKU_Control.pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = TRUE, 
+                   sample.subset = names(dat.UCP[[1]])[c(2,5,6,8)]) 
+  ggsave(paste0("./output/7.25.TAKU_Control_Prop.pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = FALSE, 
+                   sample.subset = names(dat.UCP[[1]])[c(2,5,6,8)], 
+                   plot.area = TRUE) 
+  ggsave(paste0("./output/7.25.TAKU_Control_area.pdf"), height = 3, width = 5)
+  
+   plot.interval.EE(dat.UCP, 
+                   by.proportion = TRUE, 
+                   sample.subset = names(dat.UCP[[1]])[c(2,5,6,8)], 
+                   plot.area = TRUE) 
+  ggsave(paste0("./output/7.25.TAKU_Control_prop_area.pdf"), height = 3, width = 5)
+  #############
+  #MC903
+  #########
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = FALSE, 
+                   sample.subset = names(dat.UCP[[1]])[c(1,3,4,7)]) 
+  ggsave(paste0("./output/7.25.TAKU_MC903.pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = TRUE, 
+                   sample.subset = names(dat.UCP[[1]])[c(1,3,4,7)]) 
+  ggsave(paste0("./output/7.25.TAKU_MC903_Prop.pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = FALSE, 
+                   sample.subset = names(dat.UCP[[1]])[c(1,3,4,7)], 
+                   plot.area = TRUE) 
+  ggsave(paste0("./output/7.25.TAKU_MC903_area.pdf"), height = 3, width = 5)
+  
+   plot.interval.EE(dat.UCP, 
+                   by.proportion = TRUE, 
+                   sample.subset = names(dat.UCP[[1]])[c(1,3,4,7)], 
+                   plot.area = TRUE) 
+  ggsave(paste0("./output/7.25.TAKU_MC903_prop_area.pdf"), height = 3, width = 5)
 ```
 
 
