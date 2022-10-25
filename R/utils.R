@@ -24,14 +24,19 @@ subset.data <- function(original.dat, samples) {
 library(stringr)
 library(chron)
 time.handler <- function(pre.plot.dat) {
- 
   dtime <- str_split(pre.plot.dat$Time, " ", simplify = TRUE)[,2]
   no.dates <- which(dtime %in% c("AM", "PM"))
   actual.time <- str_split(pre.plot.dat$Time[no.dates], " ", simplify = TRUE)[,1]
   dtime[no.dates] <- actual.time
-  dtime <- chron(time = dtime, format = c("h:m:s"))
+  #dtime <- chron(time = dtime, format = c("h:m:s"))
   
-  dtime2 <- as.POSIXlt(dtime, format = "%H:%M:%S")
+  dtime2 <- as.POSIXct(dtime, format = "%H:%M:%S")
   time.of.day <- str_split(pre.plot.dat$Time, " ", simplify = TRUE)[,3]
-  dtime2 <- ifelse(time.of.day == "PM", dtime2 + 12*60*60, dtime)
+  #Adding 12 hours to PM times or exactly midnight
+  dtime2[which(time.of.day %in% c("PM", ""))] <- dtime2[which(time.of.day %in% c("PM", ""))] + 12*60*60
+  #Removing 12 hours from first hour past midnight
+  midnights <- which(grepl("12", str_split(dtime, ":", simplify = TRUE)[,1]) & time.of.day == "AM")
+  dtime2[midnights] <- dtime2[midnights] - + 12*60*60
+  
+  
 }
