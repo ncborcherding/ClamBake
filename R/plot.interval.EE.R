@@ -18,7 +18,7 @@ plot.interval.EE <- function(cage.data,
   interval.assignments2 <- as.data.frame(table(interval.assignments))
   interval.assignments <- interval.assignments2 %>%
     group_by(Interval_num) %>%
-    slice_max(order_by = Freq, n = 1)
+    slice_max(order_by = Freq, n = 1, with_ties = FALSE)
   interval.assignments <- interval.assignments[,1:2]
   indep.vairables <- pre.plot.dat[,c("Feed", "Drink", "Heat", "Fat.Mass", "Lean.Mass", "Interval_num")]
   indep.vairables <- indep.vairables %>%
