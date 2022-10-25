@@ -31,11 +31,15 @@ time.handler <- function(pre.plot.dat) {
   
   dtime2 <- as.POSIXct(dtime, format = "%H:%M:%S")
   time.of.day <- str_split(pre.plot.dat$Time, " ", simplify = TRUE)[,3]
+  noon <- intersect(grep("12", str_split(dtime, ":", simplify = TRUE)[,1]), which(time.of.day == "PM"))
+  midnights <- intersect(grep("12", str_split(dtime, ":", simplify = TRUE)[,1]), which(time.of.day == "AM"))
   #Adding 12 hours to PM times or exactly midnight
   dtime2[which(time.of.day %in% c("PM", ""))] <- dtime2[which(time.of.day %in% c("PM", ""))] + 12*60*60
   #Removing 12 hours from first hour past midnight
-  midnights <- which(grepl("12", str_split(dtime, ":", simplify = TRUE)[,1]) & time.of.day == "AM")
-  dtime2[midnights] <- dtime2[midnights] - + 12*60*60
+  
+  dtime2[midnights] <- dtime2[midnights] -  12*60*60
+  
+  dtime2[noon] <- dtime2[noon] -  12*60*60
   
   day <- which(dtime2 >= as.POSIXct("06:00:00", format = "%H:%M:%S") & dtime2 <= as.POSIXct("18:00:00", format = "%H:%M:%S"))
   pre.plot.dat$time.cycle <- "night"

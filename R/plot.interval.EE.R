@@ -13,7 +13,13 @@ plot.interval.EE <- function(cage.data,
     cage.data <- subset.data(cage.data, sample.subset)
   }
   pre.plot.dat <- dplyr::bind_rows(cage.data[[1]])
+  pre.plot.dat <- pre.plot.dat[pre.plot.dat$Cage %!in% c("", "==============="),]
   interval.assignments <- time.handler(pre.plot.dat)
+  interval.assignments2 <- as.data.frame(table(interval.assignments))
+  interval.assignments <- interval.assignments2 %>%
+    group_by(Interval_num) %>%
+    slice_max(order_by = Freq, n = 1)
+  interval.assignments <- interval.assignments[,1:2]
   indep.vairables <- pre.plot.dat[,c("Feed", "Drink", "Heat", "Fat.Mass", "Lean.Mass", "Interval_num")]
   indep.vairables <- indep.vairables %>%
     mutate("Ambulation" = sqrt(pre.plot.dat$Xamb^2 + pre.plot.dat$Yamb^2)) 
@@ -84,16 +90,16 @@ plot.interval.EE <- function(cage.data,
     as.data.frame()
   
   melted <- reshape2::melt(EE.summary[,c(1,7:10)], id.vars = 1)
-  melted <- unique(merge(melted, interval.assignments, by = 1))
+  melted <- merge(melted, interval.assignments, by = 1)
   melted$variable <- factor(melted$variable, levels = c("Adaptive.EE", "Ambulatory.EE", "ThermicEffect.EE", "BMR.EE"))
   
-  melted$Interval_num[which(melted$time.cycle == "night")]
+  
   if(!by.proportion) {
     top.bar <- round(max(indep.vairables$Heat)) / median(table(melted$Interval_num))
   } else {
     top.bar = 1.2 / median(table(melted$Interval_num))
   }
-
+  
   plot <- ggplot(melted, aes(x=as.numeric(Interval_num), y =as.numeric(value))) + 
     stat_summary(data = subset(melted, time.cycle == "night"), 
              geom = "bar", 
