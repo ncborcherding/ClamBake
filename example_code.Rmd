@@ -418,9 +418,31 @@ for (i in seq_len(length(dat.UCP[[1]]))) {
   ggsave(paste0("./output/3.30.cage", str_split(names(dat.UCP[[1]])[i], "[.]", simplify = TRUE)[,2], "_", dat.UCP[[2]]$Comments[i], ".proportion.pdf"), height = 3, width = 5)
 }
 ############
-#mCre
+#flox
 #######
-
+plot.interval.EE(dat.UCP, 
+                   by.proportion = FALSE, 
+                   sample.subset = names(dat.UCP[[1]])[c(2,3,6)]) 
+  ggsave(paste0("./output/3.30.cage_flox.pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = TRUE, 
+                   sample.subset = names(dat.UCP[[1]])[c(2,3,6)]) 
+  ggsave(paste0("./output/3.30.cage_flox_Prop.pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = FALSE, 
+                   sample.subset = names(dat.UCP[[1]])[c(2,3,6)], 
+                   plot.area = TRUE) 
+  ggsave(paste0("./output/3.30.cage_flox_area.pdf"), height = 3, width = 5)
+  
+  plot.interval.EE(dat.UCP, 
+                   by.proportion = TRUE, 
+                   sample.subset = names(dat.UCP[[1]])[c(2,3,6)], 
+                   plot.area = TRUE) 
+  ggsave(paste0("./output/3.30.cage_flox_Prop_area.pdf"), height = 3, width = 5)
+  
+  
 plot.interval.EE(dat.UCP, 
                    by.proportion = FALSE, 
                    sample.subset = names(dat.UCP[[1]])[c(1,4,5,7,8)]) 
