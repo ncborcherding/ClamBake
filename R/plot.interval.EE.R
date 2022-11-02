@@ -59,19 +59,19 @@ plot.interval.EE <- function(cage.data,
   #SF <- ifelse(SF < 1, 1-(SF/2), SF)
   #SF <- ifelse(SF > 1, 1-(1-SF)/2, SF)
   indep.vairables$SF <- SF
-  #Tendency to overestimate BMR if we do not use the scale factor
+  #Tendency to overestimate RMR if we do not use the scale factor
   indep.vairables$Ambulatory.EE <- (indep.vairables$Ambulation*0.3228)/indep.vairables$SF
   indep.vairables$ThermicEffect.EE <- (indep.vairables$Feed*8.4165)/indep.vairables$SF
   
   indep.vairables$Adaptive.EE <- indep.vairables$Heat - indep.vairables$heat.mean
   indep.vairables$Adaptive.EE[indep.vairables$Adaptive.EE < 0] <- 0
   
-  indep.vairables$BMR.EE <- indep.vairables$Heat - (indep.vairables$Adaptive.EE + indep.vairables$Ambulatory.EE + indep.vairables$ThermicEffect.EE)
-  #Impute mean BMR if estimated BMR > or < 1.5 z.score
-  median.BMR <- mean(indep.vairables$BMR.EE, na.rm = T)
-  sd.BMR <- sd(indep.vairables$BMR.EE)
-  BMR.position <- which(indep.vairables$BMR.EE > median.BMR+1.5*sd.BMR | indep.vairables$BMR.EE < median.BMR-1.5*sd.BMR)
-  indep.vairables$BMR.EE[BMR.position] <- median.BMR
+  indep.vairables$RMR.EE <- indep.vairables$Heat - (indep.vairables$Adaptive.EE + indep.vairables$Ambulatory.EE + indep.vairables$ThermicEffect.EE)
+  #Impute mean RMR if estimated RMR > or < 1.5 z.score
+  median.RMR <- mean(indep.vairables$RMR.EE, na.rm = T)
+  sd.RMR <- sd(indep.vairables$RMR.EE)
+  RMR.position <- which(indep.vairables$RMR.EE > median.RMR+1.5*sd.RMR | indep.vairables$RMR.EE < median.RMR-1.5*sd.RMR)
+  indep.vairables$RMR.EE[RMR.position] <- median.RMR
   
   rho <- cor.test(indep.vairables$Heat, indep.vairables$heat.mean)
   annotations <- data.frame(
@@ -91,7 +91,7 @@ plot.interval.EE <- function(cage.data,
   
   melted <- reshape2::melt(EE.summary[,c(1,7:10)], id.vars = 1)
   melted <- merge(melted, interval.assignments, by = 1)
-  melted$variable <- factor(melted$variable, levels = c("Adaptive.EE", "Ambulatory.EE", "ThermicEffect.EE", "BMR.EE"))
+  melted$variable <- factor(melted$variable, levels = c("Adaptive.EE", "Ambulatory.EE", "ThermicEffect.EE", "RMR.EE"))
   
   
   if(!by.proportion) {
@@ -183,27 +183,27 @@ plot.EE <- function(cage.data,
   #SF <- ifelse(SF < 1, 1-(SF/2), SF)
   #SF <- ifelse(SF > 1, 1-(1-SF)/2, SF)
   indep.vairables$SF <- SF
-  #Tendency to overestimate BMR if we do not use the scale factor
+  #Tendency to overestimate RMR if we do not use the scale factor
   indep.vairables$Ambulatory.EE <- (indep.vairables$Ambulation*0.3228)/indep.vairables$SF
   indep.vairables$ThermicEffect.EE <- (indep.vairables$Feed*8.4165)/indep.vairables$SF
   
   indep.vairables$Adaptive.EE <- indep.vairables$Heat - indep.vairables$heat.mean
   indep.vairables$Adaptive.EE[indep.vairables$Adaptive.EE < 0] <- 0
   
-  indep.vairables$BMR.EE <- indep.vairables$Heat - (indep.vairables$Adaptive.EE + indep.vairables$Ambulatory.EE + indep.vairables$ThermicEffect.EE)
-  #Impute mean BMR if estimated BMR > or < 1.5 z.score
-  median.BMR <- mean(indep.vairables$BMR.EE, na.rm = T)
-  sd.BMR <- sd(indep.vairables$BMR.EE)
-  BMR.position <- which(indep.vairables$BMR.EE > median.BMR+1.5*sd.BMR | indep.vairables$BMR.EE < median.BMR-1.5*sd.BMR)
-  indep.vairables$BMR.EE[BMR.position] <- median.BMR
+  indep.vairables$RMR.EE <- indep.vairables$Heat - (indep.vairables$Adaptive.EE + indep.vairables$Ambulatory.EE + indep.vairables$ThermicEffect.EE)
+  #Impute mean RMR if estimated RMR > or < 1.5 z.score
+  median.RMR <- mean(indep.vairables$RMR.EE, na.rm = T)
+  sd.RMR <- sd(indep.vairables$RMR.EE)
+  RMR.position <- which(indep.vairables$RMR.EE > median.RMR+1.5*sd.RMR | indep.vairables$RMR.EE < median.RMR-1.5*sd.RMR)
+  indep.vairables$RMR.EE[RMR.position] <- median.RMR
   
   EE.summary <- indep.vairables %>%
     summarise(across(c(3,8:ncol(indep.vairables)), mean)) %>%
     as.data.frame()
   
-  melted <- reshape2::melt(EE.summary[,c("Adaptive.EE", "Ambulatory.EE", "ThermicEffect.EE", "BMR.EE")])
+  melted <- reshape2::melt(EE.summary[,c("Adaptive.EE", "Ambulatory.EE", "ThermicEffect.EE", "RMR.EE")])
   
-  melted$variable <- factor(melted$variable, levels = c("Adaptive.EE", "Ambulatory.EE", "ThermicEffect.EE", "BMR.EE"))
+  melted$variable <- factor(melted$variable, levels = c("Adaptive.EE", "Ambulatory.EE", "ThermicEffect.EE", "RMR.EE"))
   plot <- ggplot(melted, aes(x=1, y =as.numeric(value))) + 
     scale_fill_viridis(option = "H", discrete = TRUE, direction = -1) + 
     theme_classic() + 
@@ -220,64 +220,64 @@ plot.EE <- function(cage.data,
 }
 
 #################
-##What if BMR is crazy?
+##What if RMR is crazy?
 ########################
-#off.BMR <- which(indep.vairables$BMR.EE < median.BMR-sd(indep.vairables$BMR.EE)*1.3)
-#if (any(off.BMR)) {
-#  for(i in seq_along(off.BMR)) {
-#    indep.vairables$BMR.EE[off.BMR[i]] <- median.BMR
-#    remainder.EE <- indep.vairables$Heat[off.BMR[i]] - (indep.vairables$BMR.EE[off.BMR[i]] + indep.vairables$Adaptive.EE[off.BMR[i]])
+#off.RMR <- which(indep.vairables$RMR.EE < median.RMR-sd(indep.vairables$RMR.EE)*1.3)
+#if (any(off.RMR)) {
+#  for(i in seq_along(off.RMR)) {
+#    indep.vairables$RMR.EE[off.RMR[i]] <- median.RMR
+#    remainder.EE <- indep.vairables$Heat[off.RMR[i]] - (indep.vairables$RMR.EE[off.RMR[i]] + indep.vairables$Adaptive.EE[off.RMR[i]])
 #    if(remainder.EE <= 0) {
-#      indep.vairables$Ambulatory.EE[off.BMR[i]] <- 0
-#      indep.vairables$ThermicEffect.EE[off.BMR[i]] <- 0
-#      indep.vairables$Adaptive.EE[off.BMR[i]] <- 0
+#      indep.vairables$Ambulatory.EE[off.RMR[i]] <- 0
+#      indep.vairables$ThermicEffect.EE[off.RMR[i]] <- 0
+#      indep.vairables$Adaptive.EE[off.RMR[i]] <- 0
 #    } else {
-#      ratio <- indep.vairables$Ambulatory.EE[off.BMR[i]]/indep.vairables$ThermicEffect.EE[off.BMR[i]]
+#      ratio <- indep.vairables$Ambulatory.EE[off.RMR[i]]/indep.vairables$ThermicEffect.EE[off.RMR[i]]
 #      if (is.nan(ratio)) {
-#        indep.vairables$ThermicEffect.EE[off.BMR[i]] <- remainder.EE/2
-#        indep.vairables$Ambulatory.EE[off.BMR[i]] <- remainder.EE/2
+#        indep.vairables$ThermicEffect.EE[off.RMR[i]] <- remainder.EE/2
+#        indep.vairables$Ambulatory.EE[off.RMR[i]] <- remainder.EE/2
 #      } else if (is.infinite(ratio)) {
-#        indep.vairables$ThermicEffect.EE[off.BMR[i]] <- remainder.EE
+#        indep.vairables$ThermicEffect.EE[off.RMR[i]] <- remainder.EE
 #      } else if (ratio == 0) {
-#        indep.vairables$Ambulatory.EE[off.BMR[i]] <- remainder.EE
+#        indep.vairables$Ambulatory.EE[off.RMR[i]] <- remainder.EE
 #      } else if (ratio < 1 & ratio != 0) {
 #        ratio <- 1-ratio
-#        indep.vairables$ThermicEffect.EE[off.BMR[i]] <- remainder.EE*ratio
-#        indep.vairables$Ambulatory.EE[off.BMR[i]] <- remainder.EE - indep.vairables$ThermicEffect.EE[off.BMR[i]]
+#        indep.vairables$ThermicEffect.EE[off.RMR[i]] <- remainder.EE*ratio
+#        indep.vairables$Ambulatory.EE[off.RMR[i]] <- remainder.EE - indep.vairables$ThermicEffect.EE[off.RMR[i]]
 #      } else {
-#        indep.vairables$ThermicEffect.EE[off.BMR[i]] <- remainder.EE/ratio
-#        indep.vairables$Ambulatory.EE[off.BMR[i]] <- remainder.EE - indep.vairables$ThermicEffect.EE[off.BMR[i]]
+#        indep.vairables$ThermicEffect.EE[off.RMR[i]] <- remainder.EE/ratio
+#        indep.vairables$Ambulatory.EE[off.RMR[i]] <- remainder.EE - indep.vairables$ThermicEffect.EE[off.RMR[i]]
 #      }
 #    }
 #  }
 #}
 
 
-#off.BMR <- which(indep.vairables$BMR.EE > median.BMR+ sd(indep.vairables$BMR.EE)*1.3)
-#if (any(off.BMR)) {
-#  for(i in seq_along(off.BMR)) {
-#    indep.vairables$BMR.EE[off.BMR[i]] <- median.BMR
-#    remainder.EE <- indep.vairables$Heat[off.BMR[i]] - (indep.vairables$BMR.EE[off.BMR[i]] + indep.vairables$Adaptive.EE[off.BMR[i]])
+#off.RMR <- which(indep.vairables$RMR.EE > median.RMR+ sd(indep.vairables$RMR.EE)*1.3)
+#if (any(off.RMR)) {
+#  for(i in seq_along(off.RMR)) {
+#    indep.vairables$RMR.EE[off.RMR[i]] <- median.RMR
+#    remainder.EE <- indep.vairables$Heat[off.RMR[i]] - (indep.vairables$RMR.EE[off.RMR[i]] + indep.vairables$Adaptive.EE[off.RMR[i]])
 #    if(remainder.EE <= 0) {
-#      indep.vairables$Ambulatory.EE[off.BMR[i]] <- 0
-#      indep.vairables$ThermicEffect.EE[off.BMR[i]] <- 0
-#      indep.vairables$Adaptive.EE[off.BMR[i]] <- 0
+#      indep.vairables$Ambulatory.EE[off.RMR[i]] <- 0
+#      indep.vairables$ThermicEffect.EE[off.RMR[i]] <- 0
+#      indep.vairables$Adaptive.EE[off.RMR[i]] <- 0
 #    } else {
-#      ratio <- indep.vairables$Ambulatory.EE[off.BMR[i]]/indep.vairables$ThermicEffect.EE[off.BMR[i]]
+#      ratio <- indep.vairables$Ambulatory.EE[off.RMR[i]]/indep.vairables$ThermicEffect.EE[off.RMR[i]]
 #      if (is.nan(ratio)) {
-#        indep.vairables$ThermicEffect.EE[off.BMR[i]] <- remainder.EE/2
-#        indep.vairables$Ambulatory.EE[off.BMR[i]] <- remainder.EE/2
+#        indep.vairables$ThermicEffect.EE[off.RMR[i]] <- remainder.EE/2
+#        indep.vairables$Ambulatory.EE[off.RMR[i]] <- remainder.EE/2
 #      } else if (is.infinite(ratio)) {
-#        indep.vairables$ThermicEffect.EE[off.BMR[i]] <- remainder.EE
+#        indep.vairables$ThermicEffect.EE[off.RMR[i]] <- remainder.EE
 #     } else if (ratio == 0) {
-#        indep.vairables$Ambulatory.EE[off.BMR[i]] <- remainder.EE
+#        indep.vairables$Ambulatory.EE[off.RMR[i]] <- remainder.EE
 #      } else if (ratio < 1 & ratio != 0) {
  #       ratio <- 1-ratio
-#        indep.vairables$ThermicEffect.EE[off.BMR[i]] <- remainder.EE*ratio
-#        indep.vairables$Ambulatory.EE[off.BMR[i]] <- remainder.EE - indep.vairables$ThermicEffect.EE[off.BMR[i]]
+#        indep.vairables$ThermicEffect.EE[off.RMR[i]] <- remainder.EE*ratio
+#        indep.vairables$Ambulatory.EE[off.RMR[i]] <- remainder.EE - indep.vairables$ThermicEffect.EE[off.RMR[i]]
 #      } else {
-#        indep.vairables$ThermicEffect.EE[off.BMR[i]] <- remainder.EE/ratio
-#        indep.vairables$Ambulatory.EE[off.BMR[i]] <- remainder.EE - indep.vairables$ThermicEffect.EE[off.BMR[i]]
+#        indep.vairables$ThermicEffect.EE[off.RMR[i]] <- remainder.EE/ratio
+#        indep.vairables$Ambulatory.EE[off.RMR[i]] <- remainder.EE - indep.vairables$ThermicEffect.EE[off.RMR[i]]
 #      }
 #    }
 #  }
