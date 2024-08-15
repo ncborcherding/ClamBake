@@ -764,6 +764,40 @@ for (i in seq_len(length(dat.Taku[[1]]))) {
   ggsave(paste0("./output/20240725_", str_split(names(dat.Taku[[1]])[i], "[.]", simplify = TRUE)[,2], "_", dat.Taku[[2]]$Comments[i], ".proportion.pdf"), height = 3, width = 5)
 }
 ```
+Rachel's Request 08/12/2024
+
+```{r}
+dir.to.use <- "./data_sets/20240812_ClamBake_RachelRequest/cage_data/"
+meta.file <- "./data_sets/20240812_ClamBake_RachelRequest/meta.csv"
+
+meta <- read.csv(meta.file)
+dat.Taku <- load.data(file.dir = dir.to.use,
+                 meta.file = meta.file,
+                 equilibrate.interval = 8)
+
+for (i in seq_along(dat.Taku[[1]])) {
+  dat.Taku[[1]][[i]]$Weight <- dat.Taku[[2]][i,"Weight"]
+  dat.Taku[[1]][[i]]$Lean.Mass <- dat.Taku[[2]][i,"Lean.mass"]
+  dat.Taku[[1]][[i]]$Fat.Mass <- dat.Taku[[2]][i,"Fat.mass"]
+  dat.Taku[[1]][[i]] <- dat.Taku[[1]][[i]][,-c(31,32)]
+
+}
+
+for (i in seq_len(length(dat.Taku[[1]]))) {
+  plot <- plot.interval.EE(dat.Taku , 
+                   by.proportion = FALSE, 
+                   sample.subset = names(dat.Taku [[1]])[i]) 
+  ggsave(paste0("./output/20240812_", str_split(names(dat.Taku[[1]])[i], "[.]", simplify = TRUE)[,2], "_", dat.Taku [[2]]$Comments[i], ".pdf"), height = 3, width = 5)
+  
+  data.cast <- reshape2::dcast(plot$data, Interval_num ~ variable)
+  write.csv(data.cast, paste0("./output/20240812_", str_split(names(dat.Taku[[1]])[i], "[.]", simplify = TRUE)[,2], "_", dat.Taku [[2]]$Comments[i], "_estimates.csv"))
+  
+  plot.interval.EE(dat.Taku , 
+                   by.proportion = TRUE, 
+                   sample.subset = names(dat.Taku [[1]])[i]) 
+  ggsave(paste0("./output/20240812_", str_split(names(dat.Taku[[1]])[i], "[.]", simplify = TRUE)[,2], "_", dat.Taku[[2]]$Comments[i], ".proportion.pdf"), height = 3, width = 5)
+}
+```
 
 
 #ATG14 mice - plotting individual mice
