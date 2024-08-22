@@ -797,6 +797,36 @@ for (i in seq_len(length(dat.Taku[[1]]))) {
                    sample.subset = names(dat.Taku [[1]])[i]) 
   ggsave(paste0("./output/20240812_", str_split(names(dat.Taku[[1]])[i], "[.]", simplify = TRUE)[,2], "_", dat.Taku[[2]]$Comments[i], ".proportion.pdf"), height = 3, width = 5)
 }
+
+##################
+#Plotting by Group
+##################
+
+ plot <- plot.interval.EE(dat.Taku , 
+                  by.proportion = FALSE, 
+                  sample.subset = names(dat.Taku [[1]])[c(2,3,6,9,11,12)]) 
+ggsave(paste0("./output/20240812_OldGroup.pdf"), height = 3, width = 5)
+
+data.cast <- reshape2::dcast(plot$data, Interval_num ~ variable)
+  write.csv(data.cast, paste0("./output/20240812_OldGroup_estimates.csv"))
+
+ plot.interval.EE(dat.Taku , 
+                  by.proportion = TRUE, 
+                  sample.subset = names(dat.Taku [[1]])[c(2,3,6,9,11,12)]) 
+ggsave(paste0("./output/20240812_OldGroup_proportion.pdf"), height = 3, width = 5)
+
+ plot <- plot.interval.EE(dat.Taku , 
+                  by.proportion = FALSE, 
+                  sample.subset = names(dat.Taku [[1]])[c(1,4,5,7,8,10)]) 
+ggsave(paste0("./output/20240812_YoungGroup.pdf"), height = 3, width = 5)
+
+data.cast <- reshape2::dcast(plot$data, Interval_num ~ variable)
+  write.csv(data.cast, paste0("./output/20240812_YoungGroup_estimates.csv"))
+
+ plot.interval.EE(dat.Taku , 
+                  by.proportion = TRUE, 
+                  sample.subset = names(dat.Taku [[1]])[c(1,4,5,7,8,10)]) 
+ggsave(paste0("./output/20240812_YoungGroup_proportion.pdf"), height = 3, width = 5)
 ```
 
 
